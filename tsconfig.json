@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "module": "node18",
+    "target": "es2022",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "lib",
+    "rootDir": "src",
+    "strict": true
+  },
+  "include": ["src/**/*"]
+}
