@@ -1,0 +1,45 @@
+{
+  "name": "wattbox-api",
+  "displayName": "WattBox API",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "A Node.JS client library for the WattBox Integration Protocol API.",
+  "keywords": [
+    "airthings"
+  ],
+  "homepage": "https://github.com/michaelahern/wattbox-api",
+  "bugs": {
+    "url": "http://github.com/michaelahern/wattbox-api/issues"
+  },
+  "license": "ISC",
+  "author": "Michael Ahern <michael.ahern@gmail.com>",
+  "files": [
+    "lib"
+  ],
+  "module": "lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/michaelahern/wattbox-api.git"
+  },
+  "scripts": {
+    "build": "npm run clean && npm run lint && tsc",
+    "clean": "rimraf ./lib",
+    "cli": "npm run build && node dist/lib.js",
+    "docs": "typedoc",
+    "lint": "eslint src/**/*.ts --max-warnings=0",
+    "lint-fix": "eslint src/**/*.ts --max-warnings=0 --fix",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@stylistic/eslint-plugin": "^4",
+    "@types/node": "^22",
+    "eslint": "^9",
+    "rimraf": "^6",
+    "typedoc": "~0.28",
+    "typescript": "~5.8",
+    "typescript-eslint": "^8"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
