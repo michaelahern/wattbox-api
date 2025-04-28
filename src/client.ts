@@ -87,36 +87,85 @@ export class WattBoxClient extends EventEmitter {
         this.connected = false;
     }
 
+    public async execOutletSet(outlet: number, action: string): Promise<void> {
+        await this.handleControlMessage(`!OutletSet=${outlet},${action}`);
+    }
+
+    private async handleControlMessage(message: string): Promise<void> {
+        if (!this.connected) {
+            throw new WattBoxError('Not Connected');
+        }
+
+        if (this.socket) {
+            this.socket.write(`${message}\n`);
+        }
+
+        return new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                this.socket?.destroy();
+                reject(new WattBoxError('Timeout'));
+            }, this.opts.timeout ?? 5000);
+
+            this.internalEventEmitter.once('control', (data: boolean) => {
+                clearTimeout(timeout);
+                if (data) {
+                    resolve();
+                }
+                else {
+                    reject(new WattBoxError('Control Failed'));
+                }
+            });
+        });
+    }
+
+    /**
+     * Protocol Command: ?Firmware
+     */
     public async getFirmware(): Promise<string> {
         const response = await this.handleRequestMessage('?Firmware');
         const match = /\?Firmware=(.*)/.exec(response);
         return match ? match[1] : 'Unknown';
     }
 
+    /**
+     * Protocol Command: ?Hostname
+     */
     public async getHostname(): Promise<string> {
         const response = await this.handleRequestMessage('?Hostname');
         const match = /\?Hostname=(.*)/.exec(response);
         return match ? match[1] : 'Unknown';
     }
 
+    /**
+     * Protocol Command: ?Model
+     */
     public async getModel(): Promise<string> {
         const response = await this.handleRequestMessage('?Model');
         const match = /\?Model=(.*)/.exec(response);
         return match ? match[1] : 'Unknown';
     }
 
+    /**
+     * Protocol Command: ?OutletCount
+     */
     public async getOutletCount(): Promise<number> {
         const response = await this.handleRequestMessage('?OutletCount');
         const match = /\?OutletCount=(.*)/.exec(response);
         return match ? parseInt(match[1]) : 0;
     }
 
+    /**
+     * Protocol Command: ?OutletStatus
+     */
     public async getOutletStatus(): Promise<number[]> {
         const response = await this.handleRequestMessage('?OutletStatus');
         const match = /\?OutletStatus=(.*)/.exec(response);
         return match ? match[1].split(',').map(x => parseInt(x)) : [];
     }
 
+    /**
+     * Protocol Command: ?ServiceTag
+     */
     public async getServiceTag(): Promise<string> {
         const response = await this.handleRequestMessage('?ServiceTag');
         const match = /\?ServiceTag=(.*)/.exec(response);
@@ -177,6 +226,18 @@ export class WattBoxClient extends EventEmitter {
         if (message.startsWith('?')) {
             this.emit('debugMessage', message);
             this.internalEventEmitter.emit(message.split('=')[0], message);
+        }
+
+        // Control Messages
+        switch (message) {
+            case 'OK':
+                this.emit('debugMessage', message);
+                this.internalEventEmitter.emit('control', true);
+                break;
+            case '#Error':
+                this.emit('debugMessage', message);
+                this.internalEventEmitter.emit('control', false);
+                break;
         }
 
         // Unsolicited Messages

@@ -33,6 +33,9 @@ async function main() {
     console.log(`Outlet Status: ${await client.getOutletStatus().catch(err => console.error(err))}`);
     console.log(`Service Tag: ${await client.getServiceTag().catch(err => console.error(err))}`);
 
+    console.log(`Outlet 6 On: ${await client.execOutletSet(6, 'ON').catch(err => console.error(err))}`);
+    console.log(`Outlet 7 On: ${await client.execOutletSet(7, 'ON').catch(err => console.error(err))}`);
+
     setInterval(async () => {
         await client.getOutletStatus().then((status) => {
             console.log(`Outlet Status: ${status}`);
