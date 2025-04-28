@@ -13,12 +13,12 @@ async function main() {
         console.debug(styleText('dim', `Debug [Message]: ${message}`));
     });
 
-    client.on('debugSocket', (event: string, message: string) => {
+    client.on('debugSocket', (event: string, message?: string) => {
         console.debug(styleText('dim', `Debug [Socket ]: [${event}] ${message ? message.replace('\n', '\\n') : ''}`));
     });
 
-    client.on('outletStatusUpdate', (status: number[]) => {
-        console.log(`Outlet Status Updated: ${status}`);
+    client.on('outletStatusUpdate', (outlets: number[]) => {
+        console.log(`Outlet Status Updated: ${outlets}`);
     });
 
     client.on('ready', async () => {
