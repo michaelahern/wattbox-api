@@ -16,7 +16,7 @@
   "files": [
     "lib"
   ],
-  "module": "lib/index.js",
+  "module": "lib/module.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/michaelahern/wattbox-api.git"
@@ -24,7 +24,7 @@
   "scripts": {
     "build": "npm run clean && npm run lint && tsc",
     "clean": "rimraf ./lib",
-    "cli": "npm run build && node dist/lib.js",
+    "cli": "npm run build && node lib/cli.js",
     "docs": "typedoc",
     "lint": "eslint src/**/*.ts --max-warnings=0",
     "lint-fix": "eslint src/**/*.ts --max-warnings=0 --fix",
