@@ -20,8 +20,8 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
         return new Promise((resolve, reject) => {
             this.socket = new Socket();
             this.socket.setEncoding('utf8');
+            this.socket.setKeepAlive(true, this.opts.timeout ?? 5000);
             this.socket.setTimeout(this.opts.timeout ?? 5000);
-            this.socket.setKeepAlive(true, 1000);
 
             this.socket.on('connect', () => {
                 this.emit('debugSocket', 'connect');
@@ -99,6 +99,15 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
+     * Protocol Command: ?AutoReboot
+     */
+    public async getAutoReboot(): Promise<boolean> {
+        const response = await this.handleRequestMessage('?AutoReboot');
+        const match = /\?AutoReboot=(\d)/.exec(response);
+        return match ? Boolean(parseInt(match[1])) : false;
+    }
+
+    /**
      * Protocol Command: ?Firmware
      */
     public async getFirmware(): Promise<string> {
@@ -130,9 +139,26 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      */
     public async getOutletCount(): Promise<number> {
         const response = await this.handleRequestMessage('?OutletCount');
-        // TODO: RegEx
-        const match = /\?OutletCount=(.*)/.exec(response);
+        const match = /\?OutletCount=(\d+)/.exec(response);
         return match ? parseInt(match[1]) : 0;
+    }
+
+    /**
+     * Protocol Command: ?OutletName
+     */
+    public async getOutletName(): Promise<string[]> {
+        const response = await this.handleRequestMessage('?OutletName');
+        const match = /\?OutletName=((?:{.*},)+(?:{.*}))/.exec(response);
+        return match ? match[1].split(',').map(x => x) : [];
+    }
+
+    /**
+     * Protocol Command: ?OutletPowerStatus
+     */
+    public async getOutletPowerStatus(outlet: number): Promise<number[]> {
+        const response = await this.handleRequestMessage(`?OutletPowerStatus=${outlet}`);
+        const match = /\?OutletPowerStatus=((?:\d+(?:\.\d+)?,)+(?:\d+(?:\.\d+)?))/.exec(response);
+        return match ? match[1].split(',').map(x => parseFloat(x)) : [];
     }
 
     /**
@@ -140,9 +166,17 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      */
     public async getOutletStatus(): Promise<number[]> {
         const response = await this.handleRequestMessage('?OutletStatus');
-        // TODO: RegEx
-        const match = /\?OutletStatus=(.*)/.exec(response);
+        const match = /\?OutletStatus=((?:\d,)*\d)/.exec(response);
         return match ? match[1].split(',').map(x => parseInt(x)) : [];
+    }
+
+    /**
+     * Protocol Command: ?PowerStatus
+     */
+    public async getPowerStatus(): Promise<number[]> {
+        const response = await this.handleRequestMessage('?PowerStatus');
+        const match = /\?PowerStatus=((?:\d+(?:\.\d+)?,)+(?:\d+(?:\.\d+)?))/.exec(response);
+        return match ? match[1].split(',').map(x => parseFloat(x)) : [];
     }
 
     /**
@@ -169,7 +203,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
                 reject(new WattBoxError('Timeout'));
             }, this.opts.timeout ?? 5000);
 
-            this.internalEventEmitter.once(message, (data: string) => {
+            this.internalEventEmitter.once(message.split('=')[0], (data: string) => {
                 clearTimeout(timeout);
                 resolve(data);
             });
@@ -232,37 +266,36 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
         switch (message) {
             case 'Successfully Logged In!':
                 this.internalEventEmitter.emit('login', true);
-                break;
+                return;
             case 'Invalid Login':
                 this.internalEventEmitter.emit('login', false);
-                break;
+                return;
         }
+
+        // Emit Non-Login Messages
+        this.emit('debugMessage', message);
 
         // Request Messages
         if (message.startsWith('?')) {
-            this.emit('debugMessage', message);
             this.internalEventEmitter.emit(message.split('=')[0], message);
+            return;
         }
 
         // Control Messages
         switch (message) {
             case 'OK':
-                this.emit('debugMessage', message);
                 this.internalEventEmitter.emit('control', true);
-                break;
+                return;
             case '#Error':
-                this.emit('debugMessage', message);
                 this.internalEventEmitter.emit('control', false);
-                break;
+                return;
         }
 
         // Unsolicited Messages
-        if (message.startsWith('~')) {
-            this.emit('debugMessage', message);
-            // TODO: RegEx, Generalize
-            const outletStatusMatch = /~OutletStatus=(.*)/.exec(message);
-            if (outletStatusMatch) {
-                this.emit('outletStatusUpdate', outletStatusMatch[1].split(',').map(x => parseInt(x)));
+        if (message.startsWith('~OutletStatus')) {
+            const match = /~OutletStatus=((?:\d,)*\d)/.exec(message);
+            if (match) {
+                this.emit('outletStatusUpdate', match[1].split(',').map(x => parseInt(x)));
             }
         }
     }
@@ -272,6 +305,7 @@ export interface WattBoxClientOpts {
     host: string;
     username: string;
     password: string;
+    /** Maximum number of reconnect attempts before giving up, default Infinity */
     maxReconnectAttempts?: number;
     /** Connection and request timeout in milliseconds, default 5000ms (5s) */
     timeout?: number;

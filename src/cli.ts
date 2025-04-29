@@ -26,15 +26,16 @@ async function main() {
     });
 
     await client.connect();
+    console.log(`Auto Reboot: ${await client.getAutoReboot().catch(err => console.error(err))}`);
     console.log(`Firmware: ${await client.getFirmware().catch(err => console.error(err))}`);
     console.log(`Hostname: ${await client.getHostname().catch(err => console.error(err))}`);
     console.log(`Model: ${await client.getModel().catch(err => console.error(err))}`);
     console.log(`Outlet Count: ${await client.getOutletCount().catch(err => console.error(err))}`);
+    console.log(`Outlet Name: ${await client.getOutletName().catch(err => console.error(err))}`);
+    console.log(`Outlet Power Status: ${await client.getOutletPowerStatus(2).catch(err => console.error(err))}`);
     console.log(`Outlet Status: ${await client.getOutletStatus().catch(err => console.error(err))}`);
+    console.log(`Power Status: ${await client.getPowerStatus().catch(err => console.error(err))}`);
     console.log(`Service Tag: ${await client.getServiceTag().catch(err => console.error(err))}`);
-
-    console.log(`Outlet 6 On: ${await client.execOutletSet(6, 'ON').catch(err => console.error(err))}`);
-    console.log(`Outlet 7 On: ${await client.execOutletSet(7, 'ON').catch(err => console.error(err))}`);
 
     setInterval(async () => {
         await client.getOutletStatus().then((status) => {
