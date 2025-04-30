@@ -15,7 +15,7 @@ async function main() {
     });
 
     client.on('debugsock', (event: string, payload?: string) => {
-        console.debug(styleText('dim', `Debug [sock]: [${event}] ${payload ? payload.replace('\n', '\\n') : ''}`));
+        console.debug(styleText('dim', `Debug [sock]: [${event}] ${payload ? payload.replace(/\n/g, '\\n') : ''}`));
     });
 
     client.on('outletStatus', (outlets: boolean[]) => {
