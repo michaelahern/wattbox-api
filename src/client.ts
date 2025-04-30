@@ -1,16 +1,15 @@
 import { EventEmitter } from 'events';
 import { Socket } from 'net';
-import { OutletAction, OutletPowerStatus, PowerStatus, UPSStatus } from './schemas.js';
+import { WattBoxOutletAction, WattBoxOutletPowerStatus, WattBoxPowerStatus, WattBoxUPSStatus } from './schemas.js';
 
 export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     private opts: WattBoxClientOpts;
 
+    private bcc: EventEmitter = new EventEmitter();
     private connected = false;
     private reconnectAttempts = 0;
     private reconnectTimer: NodeJS.Timeout | null = null;
     private socket: Socket | null = null;
-
-    private internalEventEmitter: EventEmitter = new EventEmitter();
 
     constructor(opts: WattBoxClientOpts) {
         super();
@@ -25,13 +24,13 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
             this.socket.setTimeout(this.opts.timeout ?? 5000);
 
             this.socket.on('connect', () => {
-                this.emit('debugSocket', 'connect');
+                this.emit('debugsock', 'connect');
                 this.connected = true;
                 this.reconnectAttempts = 0;
             });
 
-            this.internalEventEmitter.removeAllListeners('login');
-            this.internalEventEmitter.once('login', (success: boolean) => {
+            this.bcc.removeAllListeners('login');
+            this.bcc.once('login', (success: boolean) => {
                 if (success) {
                     this.emit('ready');
                     resolve();
@@ -44,19 +43,19 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
             });
 
             this.socket.on('data', (data: string) => {
-                this.emit('debugSocket', 'data', data);
+                this.emit('debugsock', 'data', data);
                 this.handleData(data);
             });
 
             this.socket.on('timeout', () => {
                 if (!this.connected) {
-                    this.emit('debugSocket', 'timeout');
+                    this.emit('debugsock', 'timeout');
                     this.socket?.destroy();
                 }
             });
 
             this.socket.on('close', () => {
-                this.emit('debugSocket', 'close');
+                this.emit('debugsock', 'close');
                 this.connected = false;
                 if (this.reconnectAttempts >= 0) {
                     const maxReconnectAttempts = this.opts.maxReconnectAttempts ?? Infinity;
@@ -66,7 +65,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
                     this.reconnectAttempts++;
                     const reconnectBackoff = Math.min(32, Math.pow(2, this.reconnectAttempts)) * 1000; // 2, 4, 8, 16, 32, 32, ...
-                    this.emit('debugSocket', 'reconnect', `#${this.reconnectAttempts}/${maxReconnectAttempts} in ${reconnectBackoff / 1000}s`);
+                    this.emit('debugsock', 'reconnect', `#${this.reconnectAttempts}/${maxReconnectAttempts} in ${reconnectBackoff / 1000}s`);
 
                     this.reconnectTimer = setTimeout(() => {
                         this.connect().catch();
@@ -75,7 +74,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
             });
 
             this.socket.on('error', (err) => {
-                this.emit('debugSocket', 'error', err.message);
+                this.emit('debugsock', 'error', err.message);
                 if (!this.connected) {
                     reject(err);
                 }
@@ -156,7 +155,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     /**
      * Protocol Command: ?OutletPowerStatus
      */
-    public async getOutletPowerStatus(outlet: number): Promise<OutletPowerStatus | null> {
+    public async getOutletPowerStatus(outlet: number): Promise<WattBoxOutletPowerStatus | null> {
         const response = await this.handleRequestMessage(`?OutletPowerStatus=${outlet}`);
         const match = /\?OutletPowerStatus=(\d+),(\d+(?:\.\d+)?),(\d+(?:\.\d+)?),(\d+(?:\.\d+)?)/.exec(response);
 
@@ -184,7 +183,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     /**
      * Protocol Command: ?PowerStatus
      */
-    public async getPowerStatus(): Promise<PowerStatus | null> {
+    public async getPowerStatus(): Promise<WattBoxPowerStatus | null> {
         const response = await this.handleRequestMessage('?PowerStatus');
         const match = /\?PowerStatus=(\d+(?:\.\d+)?),(\d+(?:\.\d+)?),(\d+(?:\.\d+)?),(0|1)/.exec(response);
 
@@ -221,7 +220,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     /**
      * Protocol Command: ?UPSStatus
      */
-    public async getUPSStatus(): Promise<UPSStatus | null> {
+    public async getUPSStatus(): Promise<WattBoxUPSStatus | null> {
         const response = await this.handleRequestMessage('?UPSStatus');
         const match = /\?UPSStatus=(\d+),(\d+),(Good|Bad),(True|False),(\d+),(True|False),(True|False)/.exec(response);
 
@@ -246,6 +245,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
         }
 
         if (this.socket) {
+            this.emit('debugmsg', `[--->] ${message}`);
             this.socket.write(`${message}\n`);
         }
 
@@ -256,20 +256,20 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
             }, this.opts.timeout ?? 5000);
 
             const onRequest = (data: string) => {
-                this.internalEventEmitter.removeListener('error', onError);
+                this.bcc.removeListener('error', onError);
                 clearTimeout(onTimeout);
                 resolve(data);
             };
 
             const onError = () => {
-                this.internalEventEmitter.removeListener(message.split('=')[0], onRequest);
+                this.bcc.removeListener(message.split('=')[0], onRequest);
                 clearTimeout(onTimeout);
                 reject(new WattBoxError('Request Error'));
             };
 
             Promise.race([
-                this.internalEventEmitter.once(message.split('=')[0], onRequest),
-                this.internalEventEmitter.once('error', onError)
+                this.bcc.once(message.split('=')[0], onRequest),
+                this.bcc.once('error', onError)
             ]);
         });
     }
@@ -277,8 +277,8 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     /**
      * Protocol Command: !OutletSet
      */
-    public async execOutletSet(outlet: number, action: OutletAction): Promise<void> {
-        await this.handleControlMessage(`!OutletSet=${outlet},${OutletAction[action]}`);
+    public async execOutletSet(outlet: number, action: WattBoxOutletAction): Promise<void> {
+        await this.handleControlMessage(`!OutletSet=${outlet},${WattBoxOutletAction[action]}`);
     }
 
     private async handleControlMessage(message: string): Promise<void> {
@@ -287,6 +287,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
         }
 
         if (this.socket) {
+            this.emit('debugmsg', `[--->] ${message}`);
             this.socket.write(`${message}\n`);
         }
 
@@ -297,20 +298,20 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
             }, this.opts.timeout ?? 5000);
 
             const onOk = () => {
-                this.internalEventEmitter.removeListener('error', onError);
+                this.bcc.removeListener('error', onError);
                 clearTimeout(onTimeout);
                 resolve();
             };
 
             const onError = () => {
-                this.internalEventEmitter.removeListener('ok', onOk);
+                this.bcc.removeListener('ok', onOk);
                 clearTimeout(onTimeout);
                 reject(new WattBoxError('Control Error'));
             };
 
             Promise.race([
-                this.internalEventEmitter.once('ok', onOk),
-                this.internalEventEmitter.once('error', onError)
+                this.bcc.once('ok', onOk),
+                this.bcc.once('error', onError)
             ]);
         });
     }
@@ -318,53 +319,51 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     private handleData(data: string): void {
         const message = data.trim();
 
-        // Handle Multiple Messages: OK\n~OutletStatus=1,1,1,1,1,1
+        // Handle Multiple Messages
+        // Example: OK\n~OutletStatus=1,1,1,1,1,1
         if (message.split('\n').length > 1) {
             message.split('\n').forEach(msg => this.handleData(msg));
             return;
         }
 
-        // Login Prompts
-        if (message.endsWith('Username:')) {
-            if (this.socket) {
-                this.socket.write(`${this.opts.username}\n`);
-            }
-            return;
-        }
-
-        if (message.endsWith('Password:')) {
-            if (this.socket) {
-                this.socket.write(`${this.opts.password}\n`);
-            }
-            return;
-        }
-
-        // Login Success & Failure
+        // Login Prompts & Messages
         switch (message) {
+            case 'Please Login to Continue':
+                return;
+            case 'Username:':
+                if (this.socket) {
+                    this.socket.write(`${this.opts.username}\n`);
+                }
+                return;
+            case 'Password:':
+                if (this.socket) {
+                    this.socket.write(`${this.opts.password}\n`);
+                }
+                return;
             case 'Successfully Logged In!':
-                this.internalEventEmitter.emit('login', true);
+                this.bcc.emit('login', true);
                 return;
             case 'Invalid Login':
-                this.internalEventEmitter.emit('login', false);
+                this.bcc.emit('login', false);
                 return;
         }
 
         // Emit Non-Login Messages
-        this.emit('debugMessage', message);
+        this.emit('debugmsg', `[<---] ${message}`);
 
         // Request Messages
         if (message.startsWith('?')) {
-            this.internalEventEmitter.emit(message.split('=')[0], message);
+            this.bcc.emit(message.split('=')[0], message);
             return;
         }
 
         // Control Messages
         switch (message) {
             case 'OK':
-                this.internalEventEmitter.emit('ok');
+                this.bcc.emit('ok');
                 return;
             case '#Error':
-                this.internalEventEmitter.emit('error');
+                this.bcc.emit('error');
                 return;
         }
 
@@ -372,7 +371,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
         if (message.startsWith('~OutletStatus')) {
             const match = /~OutletStatus=((?:[01],)*[01])/.exec(message);
             if (match) {
-                this.emit('outletStatusUpdate', match[1].split(',').map(x => Boolean(parseInt(x))));
+                this.emit('outletStatus', match[1].split(',').map(x => Boolean(parseInt(x))));
             }
         }
     }
@@ -391,8 +390,8 @@ export interface WattBoxClientOpts {
 export class WattBoxError extends Error { }
 
 export interface WattBoxEvents {
-    debugMessage: [message: string];
-    debugSocket: [event: string, message?: string];
-    outletStatusUpdate: [outlets: boolean[]];
+    debugmsg: [message: string];
+    debugsock: [event: string, payload?: string];
+    outletStatus: [outlets: boolean[]];
     ready: [];
 }

@@ -1,25 +1,25 @@
-export enum OutletAction {
+export enum WattBoxOutletAction {
     OFF = 0,
     ON = 1,
     TOGGLE = 2,
     RESET = 3
 }
 
-export interface OutletPowerStatus {
+export interface WattBoxOutletPowerStatus {
     outlet: number;
     watts: number;
     amps: number;
     volts: number;
 }
 
-export interface PowerStatus {
+export interface WattBoxPowerStatus {
     amps: number;
     watts: number;
     volts: number;
     safeVoltageStatus: boolean;
 }
 
-export interface UPSStatus {
+export interface WattBoxUPSStatus {
     batteryCharge: number;
     batteryLoad: number;
     batteryHealthy: boolean;

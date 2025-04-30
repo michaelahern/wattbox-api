@@ -5,7 +5,7 @@
     "ghcr.io/devcontainers-extra/features/wireguard-apt-get:1": {}
   },
   "onCreateCommand": {
-    "iputils-install": "sudo apt-get update && sudo apt-get install -y iputils-ping traceroute"
+    "iputils-install": "sudo apt-get update && sudo apt-get install -y iputils-ping netcat-traditional traceroute"
   },
   "updateContentCommand": {
     "npm-install": "npm install"
