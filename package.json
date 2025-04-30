@@ -17,6 +17,7 @@
     "lib"
   ],
   "module": "lib/module.js",
+  "types": "lib/module.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/michaelahern/wattbox-api.git"
