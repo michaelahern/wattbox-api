@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { Socket } from 'net';
+import { OutletPowerStatus, PowerStatus, UPSStatus } from './schemas.js';
 
 export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     private opts: WattBoxClientOpts;
@@ -103,7 +104,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      */
     public async getAutoReboot(): Promise<boolean> {
         const response = await this.handleRequestMessage('?AutoReboot');
-        const match = /\?AutoReboot=(\d)/.exec(response);
+        const match = /\?AutoReboot=([01])/.exec(response);
         return match ? Boolean(parseInt(match[1])) : false;
     }
 
@@ -113,7 +114,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     public async getFirmware(): Promise<string> {
         const response = await this.handleRequestMessage('?Firmware');
         const match = /\?Firmware=(.*)/.exec(response);
-        return match ? match[1] : 'Unknown';
+        return match ? match[1] : '';
     }
 
     /**
@@ -122,7 +123,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     public async getHostname(): Promise<string> {
         const response = await this.handleRequestMessage('?Hostname');
         const match = /\?Hostname=(.*)/.exec(response);
-        return match ? match[1] : 'Unknown';
+        return match ? match[1] : '';
     }
 
     /**
@@ -131,7 +132,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     public async getModel(): Promise<string> {
         const response = await this.handleRequestMessage('?Model');
         const match = /\?Model=(.*)/.exec(response);
-        return match ? match[1] : 'Unknown';
+        return match ? match[1] : '';
     }
 
     /**
@@ -148,35 +149,55 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      */
     public async getOutletName(): Promise<string[]> {
         const response = await this.handleRequestMessage('?OutletName');
-        const match = /\?OutletName=((?:{.*},)+(?:{.*}))/.exec(response);
-        return match ? match[1].split(',').map(x => x) : [];
+        const match = /\?OutletName=(.*)/.exec(response);
+        return match ? match[1].split(',').map(x => x.slice(1, -1)) : [];
     }
 
     /**
      * Protocol Command: ?OutletPowerStatus
      */
-    public async getOutletPowerStatus(outlet: number): Promise<number[]> {
+    public async getOutletPowerStatus(outlet: number): Promise<OutletPowerStatus | null> {
         const response = await this.handleRequestMessage(`?OutletPowerStatus=${outlet}`);
-        const match = /\?OutletPowerStatus=((?:\d+(?:\.\d+)?,)+(?:\d+(?:\.\d+)?))/.exec(response);
-        return match ? match[1].split(',').map(x => parseFloat(x)) : [];
+        const match = /\?OutletPowerStatus=(\d+),(\d+(?:\.\d+)?),(\d+(?:\.\d+)?),(\d+(?:\.\d+)?)/.exec(response);
+
+        if (!match || match.length < 5) {
+            return null;
+        }
+
+        return {
+            outlet: parseInt(match[1]),
+            watts: parseFloat(match[2]),
+            amps: parseFloat(match[3]),
+            volts: parseFloat(match[4])
+        };
     }
 
     /**
      * Protocol Command: ?OutletStatus
      */
-    public async getOutletStatus(): Promise<number[]> {
+    public async getOutletStatus(): Promise<boolean[]> {
         const response = await this.handleRequestMessage('?OutletStatus');
-        const match = /\?OutletStatus=((?:\d,)*\d)/.exec(response);
-        return match ? match[1].split(',').map(x => parseInt(x)) : [];
+        const match = /\?OutletStatus=((?:[01],)*[01])/.exec(response);
+        return match ? match[1].split(',').map(x => Boolean(parseInt(x))) : [];
     }
 
     /**
      * Protocol Command: ?PowerStatus
      */
-    public async getPowerStatus(): Promise<number[]> {
+    public async getPowerStatus(): Promise<PowerStatus | null> {
         const response = await this.handleRequestMessage('?PowerStatus');
-        const match = /\?PowerStatus=((?:\d+(?:\.\d+)?,)+(?:\d+(?:\.\d+)?))/.exec(response);
-        return match ? match[1].split(',').map(x => parseFloat(x)) : [];
+        const match = /\?PowerStatus=(\d+(?:\.\d+)?),(\d+(?:\.\d+)?),(\d+(?:\.\d+)?),(0|1)/.exec(response);
+
+        if (!match || match.length < 5) {
+            return null;
+        }
+
+        return {
+            amps: parseFloat(match[1]),
+            watts: parseFloat(match[2]),
+            volts: parseFloat(match[3]),
+            safeVoltageStatus: Boolean(parseInt(match[4]))
+        };
     }
 
     /**
@@ -185,7 +206,38 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     public async getServiceTag(): Promise<string> {
         const response = await this.handleRequestMessage('?ServiceTag');
         const match = /\?ServiceTag=(.*)/.exec(response);
-        return match ? match[1] : 'Unknown';
+        return match ? match[1] : '';
+    }
+
+    /**
+     * Protocol Command: ?UPSConnection
+     */
+    public async getUPSConnection(): Promise<boolean> {
+        const response = await this.handleRequestMessage('?UPSConnection');
+        const match = /\?UPSConnection=([01])/.exec(response);
+        return match ? Boolean(parseInt(match[1])) : false;
+    }
+
+    /**
+     * Protocol Command: ?UPSStatus
+     */
+    public async getUPSStatus(): Promise<UPSStatus | null> {
+        const response = await this.handleRequestMessage('?UPSStatus');
+        const match = /\?UPSStatus=(\d+),(\d+),(Good|Bad),(True|False),(\d+),(True|False),(True|False)/.exec(response);
+
+        if (!match || match.length < 8) {
+            return null;
+        }
+
+        return {
+            batteryCharge: parseInt(match[1]),
+            batteryLoad: parseInt(match[2]),
+            batteryHealthy: match[3] === 'Good',
+            powerLost: match[4] === 'True',
+            batteryRuntime: parseInt(match[5]),
+            alarmEnabled: match[6] === 'True',
+            alarmMuted: match[7] === 'True'
+        };
     }
 
     private async handleRequestMessage(message: string): Promise<string> {
@@ -198,15 +250,27 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
         }
 
         return new Promise<string>((resolve, reject) => {
-            const timeout = setTimeout(() => {
+            const onTimeout = setTimeout(() => {
                 this.socket?.destroy();
                 reject(new WattBoxError('Timeout'));
             }, this.opts.timeout ?? 5000);
 
-            this.internalEventEmitter.once(message.split('=')[0], (data: string) => {
-                clearTimeout(timeout);
+            const onRequest = (data: string) => {
+                this.internalEventEmitter.removeListener('error', onError);
+                clearTimeout(onTimeout);
                 resolve(data);
-            });
+            };
+
+            const onError = () => {
+                this.internalEventEmitter.removeListener(message.split('=')[0], onRequest);
+                clearTimeout(onTimeout);
+                reject(new WattBoxError('Request Error'));
+            };
+
+            Promise.race([
+                this.internalEventEmitter.once(message.split('=')[0], onRequest),
+                this.internalEventEmitter.once('error', onError)
+            ]);
         });
     }
 
@@ -227,20 +291,27 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
         }
 
         return new Promise<void>((resolve, reject) => {
-            const timeout = setTimeout(() => {
+            const onTimeout = setTimeout(() => {
                 this.socket?.destroy();
                 reject(new WattBoxError('Timeout'));
             }, this.opts.timeout ?? 5000);
 
-            this.internalEventEmitter.once('control', (data: boolean) => {
-                clearTimeout(timeout);
-                if (data) {
-                    resolve();
-                }
-                else {
-                    reject(new WattBoxError('Control Failed'));
-                }
-            });
+            const onOk = () => {
+                this.internalEventEmitter.removeListener('error', onError);
+                clearTimeout(onTimeout);
+                resolve();
+            };
+
+            const onError = () => {
+                this.internalEventEmitter.removeListener('ok', onOk);
+                clearTimeout(onTimeout);
+                reject(new WattBoxError('Control Error'));
+            };
+
+            Promise.race([
+                this.internalEventEmitter.once('ok', onOk),
+                this.internalEventEmitter.once('error', onError)
+            ]);
         });
     }
 
@@ -284,18 +355,18 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
         // Control Messages
         switch (message) {
             case 'OK':
-                this.internalEventEmitter.emit('control', true);
+                this.internalEventEmitter.emit('ok');
                 return;
             case '#Error':
-                this.internalEventEmitter.emit('control', false);
+                this.internalEventEmitter.emit('error');
                 return;
         }
 
         // Unsolicited Messages
         if (message.startsWith('~OutletStatus')) {
-            const match = /~OutletStatus=((?:\d,)*\d)/.exec(message);
+            const match = /~OutletStatus=((?:[01],)*[01])/.exec(message);
             if (match) {
-                this.emit('outletStatusUpdate', match[1].split(',').map(x => parseInt(x)));
+                this.emit('outletStatusUpdate', match[1].split(',').map(x => Boolean(parseInt(x))));
             }
         }
     }
@@ -316,6 +387,6 @@ export class WattBoxError extends Error { }
 export interface WattBoxEvents {
     debugMessage: [message: string];
     debugSocket: [event: string, message?: string];
-    outletStatusUpdate: [outlets: number[]];
+    outletStatusUpdate: [outlets: boolean[]];
     ready: [];
 }
