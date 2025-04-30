@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { Socket } from 'net';
-import { OutletPowerStatus, PowerStatus, UPSStatus } from './schemas.js';
+import { OutletAction, OutletPowerStatus, PowerStatus, UPSStatus } from './schemas.js';
 
 export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     private opts: WattBoxClientOpts;
@@ -277,8 +277,8 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     /**
      * Protocol Command: !OutletSet
      */
-    public async execOutletSet(outlet: number, action: string): Promise<void> {
-        await this.handleControlMessage(`!OutletSet=${outlet},${action}`);
+    public async execOutletSet(outlet: number, action: OutletAction): Promise<void> {
+        await this.handleControlMessage(`!OutletSet=${outlet},${OutletAction[action]}`);
     }
 
     private async handleControlMessage(message: string): Promise<void> {
@@ -317,6 +317,12 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
     private handleData(data: string): void {
         const message = data.trim();
+
+        // Handle Multiple Messages: OK\n~OutletStatus=1,1,1,1,1,1
+        if (message.split('\n').length > 1) {
+            message.split('\n').forEach(msg => this.handleData(msg));
+            return;
+        }
 
         // Login Prompts
         if (message.endsWith('Username:')) {

@@ -1,3 +1,10 @@
+export enum OutletAction {
+    OFF = 0,
+    ON = 1,
+    TOGGLE = 2,
+    RESET = 3
+}
+
 export interface OutletPowerStatus {
     outlet: number;
     watts: number;

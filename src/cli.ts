@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 import { styleText } from 'node:util';
 import { WattBoxClient } from './client.js';
+import { OutletAction } from './schemas.js';
 
 async function main() {
     const client = new WattBoxClient({
-        host: '192.168.1.191',
-        username: 'ahernm',
-        password: 'wattbox'
+        host: '[HOST]',
+        username: '[USERNAME]',
+        password: '[PASSWORD]'
     });
 
     client.on('debugMessage', (message: string) => {
@@ -38,6 +39,8 @@ async function main() {
     await client.getServiceTag().then(resp => console.log('Service Tag:', resp)).catch(err => console.error(err));
     await client.getUPSConnection().then(resp => console.log('UPS Connection:', resp)).catch(err => console.error(err));
     await client.getUPSStatus().then(resp => console.log('UPS Status:', resp)).catch(err => console.error(err));
+
+    await client.execOutletSet(6, OutletAction.ON).then(() => console.log('Set Outlet 6:', OutletAction.ON)).catch(err => console.error(err));
 }
 
 main().catch(err => console.error(err));
