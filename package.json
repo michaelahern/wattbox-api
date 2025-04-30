@@ -1,7 +1,6 @@
 {
   "name": "wattbox-api",
   "displayName": "WattBox API",
-  "type": "module",
   "version": "0.1.0",
   "description": "A Node.JS client library for the WattBox Integration Protocol API.",
   "keywords": [
@@ -16,8 +15,15 @@
   "files": [
     "lib"
   ],
-  "module": "lib/module.js",
-  "types": "lib/module.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./lib/module.js",
+      "types": "./lib/module.d.ts"
+    }
+  },
+  "main": "./lib/module.js",
+  "types": "./lib/module.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/michaelahern/wattbox-api.git"
@@ -25,8 +31,8 @@
   "scripts": {
     "build": "npm run clean && npm run lint && tsc",
     "clean": "rimraf ./lib",
-    "cli": "npm run build && node lib/cli.js",
     "docs": "typedoc",
+    "example": "npm run build && node ./lib/example.js",
     "lint": "eslint src/**/*.ts --max-warnings=0",
     "lint-fix": "eslint src/**/*.ts --max-warnings=0 --fix",
     "prepublishOnly": "npm run build"

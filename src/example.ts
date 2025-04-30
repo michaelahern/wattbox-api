@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { styleText } from 'node:util';
 import { WattBoxClient } from './client.js';
-import { OutletAction } from './schemas.js';
+// import { WattBoxOutletAction } from './schemas.js';
 
 async function main() {
     const client = new WattBoxClient({
@@ -10,15 +10,15 @@ async function main() {
         password: '[PASSWORD]'
     });
 
-    client.on('debugMessage', (message: string) => {
-        console.debug(styleText('dim', `Debug [Message]: ${message}`));
+    client.on('debugmsg', (message: string) => {
+        console.debug(styleText('dim', `Debug [data]: ${message}`));
     });
 
-    client.on('debugSocket', (event: string, message?: string) => {
-        console.debug(styleText('dim', `Debug [Socket ]: [${event}] ${message ? message.replace('\n', '\\n') : ''}`));
+    client.on('debugsock', (event: string, payload?: string) => {
+        console.debug(styleText('dim', `Debug [sock]: [${event}] ${payload ? payload.replace('\n', '\\n') : ''}`));
     });
 
-    client.on('outletStatusUpdate', (outlets: boolean[]) => {
+    client.on('outletStatus', (outlets: boolean[]) => {
         console.log('Outlet Status:', outlets);
     });
 
@@ -40,7 +40,7 @@ async function main() {
     await client.getUPSConnection().then(resp => console.log('UPS Connection:', resp)).catch(err => console.error(err));
     await client.getUPSStatus().then(resp => console.log('UPS Status:', resp)).catch(err => console.error(err));
 
-    await client.execOutletSet(6, OutletAction.ON).then(() => console.log('Set Outlet 6:', OutletAction.ON)).catch(err => console.error(err));
+    // await client.execOutletSet(6, WattBoxOutletAction.RESET).then(() => console.log('Set Outlet 6:', WattBoxOutletAction.RESET)).catch(err => console.error(err));
 }
 
 main().catch(err => console.error(err));
