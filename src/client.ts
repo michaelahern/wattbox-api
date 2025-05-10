@@ -99,6 +99,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
+     * Request Auto Reboot Status for the system
+     *
+     * @remarks
      * Protocol Command: ?AutoReboot
      */
     public async getAutoReboot(): Promise<boolean> {
@@ -108,6 +111,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
+     * Request Firmware Version
+     *
+     * @remarks
      * Protocol Command: ?Firmware
      */
     public async getFirmware(): Promise<string> {
@@ -117,6 +123,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
+     * Request Hostname
+     *
+     * @remarks
      * Protocol Command: ?Hostname
      */
     public async getHostname(): Promise<string> {
@@ -126,6 +135,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
+     * Request Model Number
+     *
+     * @remarks
      * Protocol Command: ?Model
      */
     public async getModel(): Promise<string> {
@@ -135,6 +147,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
+     * Request Outlet Count
+     *
+     * @remarks
      * Protocol Command: ?OutletCount
      */
     public async getOutletCount(): Promise<number> {
@@ -144,6 +159,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
+     * Request Outlet Names for all outlets
+     *
+     * @remarks
      * Protocol Command: ?OutletName
      */
     public async getOutletName(): Promise<string[]> {
@@ -153,6 +171,11 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
+     * Request Outlet Power Status for a specific outlet
+     *
+     * NOTE: Not supported on WB150/250
+     *
+     * @remarks
      * Protocol Command: ?OutletPowerStatus
      */
     public async getOutletPowerStatus(outlet: number): Promise<WattBoxOutletPowerStatus | null> {
@@ -172,6 +195,11 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
+     * Request Outlet States
+     * Where the array index is the outlet number (0-indexed) and the value at the index
+     * indicates state. False = Off, True = On
+     *
+     * @remarks
      * Protocol Command: ?OutletStatus
      */
     public async getOutletStatus(): Promise<boolean[]> {
@@ -181,6 +209,11 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
+     * Request Power Status for the system
+     *
+     * NOTE: Not supported on WB150/250
+     *
+     * @remarks
      * Protocol Command: ?PowerStatus
      */
     public async getPowerStatus(): Promise<WattBoxPowerStatus | null> {
@@ -200,6 +233,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
+     * Request the unit's Service Tag
+     *
+     * @remarks
      * Protocol Command: ?ServiceTag
      */
     public async getServiceTag(): Promise<string> {
@@ -209,6 +245,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
+     * Reuqest UPS Connection to find out if a UPS has been attached to the WattBox
+     *
+     * @remarks
      * Protocol Command: ?UPSConnection
      */
     public async getUPSConnection(): Promise<boolean> {
@@ -218,6 +257,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
+     * Request UPS Status if there is a UPS attached
+     *
+     * @remarks
      * Protocol Command: ?UPSStatus
      */
     public async getUPSStatus(): Promise<WattBoxUPSStatus | null> {
