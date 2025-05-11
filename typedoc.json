@@ -1,9 +1,9 @@
 {
-    "$schema": "https://typedoc.org/schema.json",
-    "entryPoints": ["./src/module.ts"],
-    "name": "WattBox Integration Protocol API",
-    "out": "docs",
-    "sort": [
-        "source-order"
-    ]
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./src/module.ts"],
+  "name": "WattBox API",
+  "out": "docs",
+  "sort": [
+    "source-order"
+  ]
 }

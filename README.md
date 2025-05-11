@@ -1,4 +1,4 @@
-# WattBox Integration Protocol API
+# WattBox API Client
 
 [![npm](https://badgen.net/npm/v/wattbox-api)](https://www.npmjs.com/package/wattbox-api)
 [![npm](https://badgen.net/npm/dt/wattbox-api)](https://www.npmjs.com/package/wattbox-api)
@@ -17,3 +17,11 @@ https://michaelahern.github.io/wattbox-api/
 ```bash
 $ npm install wattbox-api
 ```
+
+## Supported Devices
+
+- WB-800 Series
+- WB-250 Series
+- WB-150 Series
+
+_Note: This plugin implements the WattBox Integration Protocol used by the above series devices, and does not support  WB-700 and WB-300 series devices..._

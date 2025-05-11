@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import { Socket } from 'net';
-import { WattBoxOutletAction, WattBoxOutletPowerStatus, WattBoxPowerStatus, WattBoxUPSStatus } from './schemas.js';
+import { WattBoxOutletAction } from './schemas.js';
+import type { WattBoxOutletPowerStatus, WattBoxPowerStatus, WattBoxUPSStatus } from './schemas.js';
 
 export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     private opts: WattBoxClientOpts;
@@ -107,7 +108,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     public async getAutoReboot(): Promise<boolean> {
         const response = await this.handleRequestMessage('?AutoReboot');
         const match = /\?AutoReboot=([01])/.exec(response);
-        return match ? Boolean(parseInt(match[1])) : false;
+        return match && match[1] ? Boolean(parseInt(match[1])) : false;
     }
 
     /**
@@ -119,7 +120,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     public async getFirmware(): Promise<string> {
         const response = await this.handleRequestMessage('?Firmware');
         const match = /\?Firmware=(.*)/.exec(response);
-        return match ? match[1] : '';
+        return match && match[1] ? match[1] : '';
     }
 
     /**
@@ -131,7 +132,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     public async getHostname(): Promise<string> {
         const response = await this.handleRequestMessage('?Hostname');
         const match = /\?Hostname=(.*)/.exec(response);
-        return match ? match[1] : '';
+        return match && match[1] ? match[1] : '';
     }
 
     /**
@@ -143,7 +144,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     public async getModel(): Promise<string> {
         const response = await this.handleRequestMessage('?Model');
         const match = /\?Model=(.*)/.exec(response);
-        return match ? match[1] : '';
+        return match && match[1] ? match[1] : '';
     }
 
     /**
@@ -155,7 +156,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     public async getOutletCount(): Promise<number> {
         const response = await this.handleRequestMessage('?OutletCount');
         const match = /\?OutletCount=(\d+)/.exec(response);
-        return match ? parseInt(match[1]) : 0;
+        return match && match[1] ? parseInt(match[1]) : 0;
     }
 
     /**
@@ -167,7 +168,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     public async getOutletName(): Promise<string[]> {
         const response = await this.handleRequestMessage('?OutletName');
         const match = /\?OutletName=(.*)/.exec(response);
-        return match ? match[1].split(',').map(x => x.slice(1, -1)) : [];
+        return match && match[1] ? match[1].split(',').map(x => x.slice(1, -1)) : [];
     }
 
     /**
@@ -205,7 +206,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     public async getOutletStatus(): Promise<boolean[]> {
         const response = await this.handleRequestMessage('?OutletStatus');
         const match = /\?OutletStatus=((?:[01],)*[01])/.exec(response);
-        return match ? match[1].split(',').map(x => Boolean(parseInt(x))) : [];
+        return match && match[1] ? match[1].split(',').map(x => Boolean(parseInt(x))) : [];
     }
 
     /**
@@ -241,7 +242,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     public async getServiceTag(): Promise<string> {
         const response = await this.handleRequestMessage('?ServiceTag');
         const match = /\?ServiceTag=(.*)/.exec(response);
-        return match ? match[1] : '';
+        return match && match[1] ? match[1] : '';
     }
 
     /**
@@ -253,7 +254,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     public async getUPSConnection(): Promise<boolean> {
         const response = await this.handleRequestMessage('?UPSConnection');
         const match = /\?UPSConnection=([01])/.exec(response);
-        return match ? Boolean(parseInt(match[1])) : false;
+        return match && match[1] ? Boolean(parseInt(match[1])) : false;
     }
 
     /**
@@ -412,7 +413,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
         // Unsolicited Messages
         if (message.startsWith('~OutletStatus')) {
             const match = /~OutletStatus=((?:[01],)*[01])/.exec(message);
-            if (match) {
+            if (match && match[1]) {
                 this.emit('outletStatus', match[1].split(',').map(x => Boolean(parseInt(x))));
             }
         }
