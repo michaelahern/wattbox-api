@@ -45,16 +45,23 @@ async function main() {
 
     await client.connect();
 
-    await client.getModel().then(resp => console.log('Model:', resp)).catch(err => console.error(err));
+    await client.getModel()
+        .then(resp => console.log('Model:', resp))
+        .catch(err => console.error(err));
     // Model: WB-800-IPVM-6
 
-    await client.getOutletCount().then(resp => console.log('Outlet Count:', resp)).catch(err => console.error(err));
+    await client.getOutletCount()
+        .then(resp => console.log('Outlet Count:', resp))
+        .catch(err => console.error(err));
     // Outlet Count: 6
 
-    await client.getOutletStatus().then(resp => console.log('Outlet Status:', resp)).catch(err => console.error(err));
+    await client.getOutletStatus()
+        .then(resp => console.log('Outlet Status:', resp))
+        .catch(err => console.error(err));
     // Outlet Status: [ true, true, true, true, true, true ]
 
-    await client.setOutlet(6, WattBoxOutletAction.OFF).then(() => console.log('Set Outlet 6: OFF')).catch(err => console.error(err));
+    await client.setOutlet(6, WattBoxOutletAction.OFF)
+        .catch(err => console.error(err));
 }
 
 main().catch(err => console.error(err));
