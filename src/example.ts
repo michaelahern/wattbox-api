@@ -3,10 +3,19 @@ import { styleText } from 'node:util';
 import { WattBoxClient /* , WattBoxOutletAction, WattBoxOutletMode */ } from './module.js';
 
 async function main() {
+    const host = process.env.WATTBOX_HOST;
+    const username = process.env.WATTBOX_USERNAME;
+    const password = process.env.WATTBOX_PASSWORD;
+
+    if (!host || !username || !password) {
+        console.error('Please set the WATTBOX_HOST, WATTBOX_USERNAME, and WATTBOX_PASSWORD environment variables.');
+        process.exit(1);
+    }
+
     const client = new WattBoxClient({
-        host: '[HOST]',
-        username: '[USERNAME]',
-        password: '[PASSWORD]'
+        host: host,
+        username: username,
+        password: password
     });
 
     client.on('debugmsg', (message: string) => {
