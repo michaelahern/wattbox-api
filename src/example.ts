@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import { styleText } from 'node:util';
-import { WattBoxClient } from './client.js';
-// import { WattBoxOutletAction } from './schemas.js';
+import { WattBoxClient /* , WattBoxOutletAction */ } from './module.js';
 
 async function main() {
     const client = new WattBoxClient({
