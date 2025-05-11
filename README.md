@@ -38,7 +38,7 @@ async function main() {
         password: '[PASSWORD]'
     });
 
-    client.on('outletStatus', (outlets: boolean[]) => {
+    client.on('outletStatus', (outlets) => {
         console.log('Updated Outlet Status:', outlets);
         // Updated Outlet Status: [ true, true, true, true, true, false ]
     });
