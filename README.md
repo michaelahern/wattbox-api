@@ -38,7 +38,7 @@ async function main() {
         password: '[PASSWORD]'
     });
 
-    client.on('outletStatus', (outlets: boolean[]) => {
+    client.on('outletStatus', (outlets) => {
         console.log('Updated Outlet Status:', outlets);
         // Updated Outlet Status: [ true, true, true, true, true, false ]
     });
@@ -60,7 +60,7 @@ async function main() {
         .catch(err => console.error(err));
     // Outlet Status: [ true, true, true, true, true, true ]
 
-    await client.setOutlet(6, WattBoxOutletAction.OFF)
+    await client.setOutletAction(6, WattBoxOutletAction.OFF)
         .catch(err => console.error(err));
 }
 
