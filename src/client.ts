@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import { Socket } from 'net';
-import { WattBoxOutletAction, WattBoxOutletPowerStatus, WattBoxPowerStatus, WattBoxUPSStatus } from './schemas.js';
+import { WattBoxOutletAction } from './schemas.js';
+import type { WattBoxOutletPowerMetrics, WattBoxPowerMetrics, WattBoxUPSMetrics } from './schemas.js';
 
 export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     private opts: WattBoxClientOpts;
@@ -16,6 +17,15 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
         this.opts = opts;
     }
 
+    /**
+     * Establish a connection to the WattBox.
+     *
+     * @remarks
+     * Will attempt to connect to the WattBox using the provided host, username, and password.
+     * Will attempt to automatically reconnect if the connection is lost.
+     *
+     * @throws {WattBoxError} If the connection fails or if the login is invalid.
+     */
     public connect(): Promise<void> {
         return new Promise((resolve, reject) => {
             this.socket = new Socket();
@@ -84,6 +94,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
         });
     }
 
+    /**
+     * Disconnect from the WattBox.
+     */
     public disconnect(): void {
         if (this.reconnectTimer) {
             clearTimeout(this.reconnectTimer);
@@ -99,86 +112,102 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
-     * Request Auto Reboot Status for the system
+     * Get if auto-reboot is enabled on the WattBox.
      *
      * @remarks
      * Protocol Command: ?AutoReboot
+     *
+     * @throws {WattBoxError}
      */
     public async getAutoReboot(): Promise<boolean> {
         const response = await this.handleRequestMessage('?AutoReboot');
         const match = /\?AutoReboot=([01])/.exec(response);
-        return match ? Boolean(parseInt(match[1])) : false;
+        return match && match[1] ? Boolean(parseInt(match[1])) : false;
     }
 
     /**
-     * Request Firmware Version
+     * Get the firmware version of the WattBox.
      *
      * @remarks
      * Protocol Command: ?Firmware
+     *
+     * @throws {WattBoxError}
      */
     public async getFirmware(): Promise<string> {
         const response = await this.handleRequestMessage('?Firmware');
         const match = /\?Firmware=(.*)/.exec(response);
-        return match ? match[1] : '';
+        return match && match[1] ? match[1] : '';
     }
 
     /**
-     * Request Hostname
+     * Get the hostname of the WattBox.
      *
      * @remarks
      * Protocol Command: ?Hostname
+     *
+     * @throws {WattBoxError}
      */
     public async getHostname(): Promise<string> {
         const response = await this.handleRequestMessage('?Hostname');
         const match = /\?Hostname=(.*)/.exec(response);
-        return match ? match[1] : '';
+        return match && match[1] ? match[1] : '';
     }
 
     /**
-     * Request Model Number
+     * Get the model number of the WattBox.
      *
      * @remarks
      * Protocol Command: ?Model
+     *
+     * @throws {WattBoxError}
      */
     public async getModel(): Promise<string> {
         const response = await this.handleRequestMessage('?Model');
         const match = /\?Model=(.*)/.exec(response);
-        return match ? match[1] : '';
+        return match && match[1] ? match[1] : '';
     }
 
     /**
-     * Request Outlet Count
+     * Get the number of outlets on the WattBox.
      *
      * @remarks
      * Protocol Command: ?OutletCount
+     *
+     * @throws {WattBoxError}
      */
     public async getOutletCount(): Promise<number> {
         const response = await this.handleRequestMessage('?OutletCount');
         const match = /\?OutletCount=(\d+)/.exec(response);
-        return match ? parseInt(match[1]) : 0;
+        return match && match[1] ? parseInt(match[1]) : 0;
     }
 
     /**
-     * Request Outlet Names for all outlets
+     * Get the names of all outlets on the WattBox.
      *
      * @remarks
      * Protocol Command: ?OutletName
+     *
+     * @throws {WattBoxError}
      */
-    public async getOutletName(): Promise<string[]> {
+    public async getOutletNames(): Promise<string[]> {
         const response = await this.handleRequestMessage('?OutletName');
         const match = /\?OutletName=(.*)/.exec(response);
-        return match ? match[1].split(',').map(x => x.slice(1, -1)) : [];
+        return match && match[1] ? match[1].split(',').map(x => x.slice(1, -1)) : [];
     }
 
     /**
-     * Request Outlet Power Status for a specific outlet
+     * Get the power metrics for a specific outlet.
      *
-     * NOTE: Not supported on WB150/250
+     * @param outlet - The outlet number (1-indexed)
      *
      * @remarks
      * Protocol Command: ?OutletPowerStatus
+     *
+     * Not supported on WB150/250
+     *
+     * @throws {WattBoxError}
      */
-    public async getOutletPowerStatus(outlet: number): Promise<WattBoxOutletPowerStatus | null> {
+    public async getOutletPowerMetrics(outlet: number): Promise<WattBoxOutletPowerMetrics | null> {
         const response = await this.handleRequestMessage(`?OutletPowerStatus=${outlet}`);
         const match = /\?OutletPowerStatus=(\d+),(\d+(?:\.\d+)?),(\d+(?:\.\d+)?),(\d+(?:\.\d+)?)/.exec(response);
 
@@ -195,28 +224,33 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
-     * Request Outlet States
-     * Where the array index is the outlet number (0-indexed) and the value at the index
-     * indicates state. False = Off, True = On
+     * Get the status of all outlets, where the array index is the outlet number (0-indexed)
+     * and the value at the index indicates the outlet state (Off = false, On = true).
+     *
+     * @param outlet - The outlet number (1-indexed)
      *
      * @remarks
      * Protocol Command: ?OutletStatus
+     *
+     * @throws {WattBoxError}
      */
     public async getOutletStatus(): Promise<boolean[]> {
         const response = await this.handleRequestMessage('?OutletStatus');
         const match = /\?OutletStatus=((?:[01],)*[01])/.exec(response);
-        return match ? match[1].split(',').map(x => Boolean(parseInt(x))) : [];
+        return match && match[1] ? match[1].split(',').map(x => Boolean(parseInt(x))) : [];
     }
 
     /**
-     * Request Power Status for the system
-     *
-     * NOTE: Not supported on WB150/250
+     * Get the power metrics for the WattBox.
      *
      * @remarks
      * Protocol Command: ?PowerStatus
+     *
+     * NOTE: Not supported on WB150/250
+     *
+     * @throws {WattBoxError}
      */
-    public async getPowerStatus(): Promise<WattBoxPowerStatus | null> {
+    public async getPowerMetrics(): Promise<WattBoxPowerMetrics | null> {
         const response = await this.handleRequestMessage('?PowerStatus');
         const match = /\?PowerStatus=(\d+(?:\.\d+)?),(\d+(?:\.\d+)?),(\d+(?:\.\d+)?),(0|1)/.exec(response);
 
@@ -233,36 +267,42 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
-     * Request the unit's Service Tag
+     * Get the service tag of the WattBox.
      *
      * @remarks
      * Protocol Command: ?ServiceTag
+     *
+     * @throws {WattBoxError}
      */
     public async getServiceTag(): Promise<string> {
         const response = await this.handleRequestMessage('?ServiceTag');
         const match = /\?ServiceTag=(.*)/.exec(response);
-        return match ? match[1] : '';
+        return match && match[1] ? match[1] : '';
     }
 
     /**
-     * Reuqest UPS Connection to find out if a UPS has been attached to the WattBox
+     * Get if a UPS has been attached to the WattBox.
      *
      * @remarks
      * Protocol Command: ?UPSConnection
+     *
+     * @throws {WattBoxError}
      */
-    public async getUPSConnection(): Promise<boolean> {
+    public async getUPSConnected(): Promise<boolean> {
         const response = await this.handleRequestMessage('?UPSConnection');
         const match = /\?UPSConnection=([01])/.exec(response);
-        return match ? Boolean(parseInt(match[1])) : false;
+        return match && match[1] ? Boolean(parseInt(match[1])) : false;
     }
 
     /**
-     * Request UPS Status if there is a UPS attached
+     * Get the UPS status if a UPS is attached to the WattBox.
      *
      * @remarks
      * Protocol Command: ?UPSStatus
+     *
+     * @throws {WattBoxError}
      */
-    public async getUPSStatus(): Promise<WattBoxUPSStatus | null> {
+    public async getUPSMetrics(): Promise<WattBoxUPSMetrics | null> {
         const response = await this.handleRequestMessage('?UPSStatus');
         const match = /\?UPSStatus=(\d+),(\d+),(Good|Bad),(True|False),(\d+),(True|False),(True|False)/.exec(response);
 
@@ -317,9 +357,46 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
-     * Protocol Command: !OutletSet
+     * Request to reboot the device immediately. The client will loose the
+     * connection to the device until the device is back online.
+     *
+     * @remarks
+     * Protocol Command: !Reboot
+     *
+     * @throws {WattBoxError}
      */
-    public async execOutletSet(outlet: number, action: WattBoxOutletAction): Promise<void> {
+    public async reboot(): Promise<void> {
+        await this.handleControlMessage(`!Reboot`);
+    }
+
+    /**
+     * Set auto reboot configuration on the WattBox.
+     *
+     * @param autoReboot - The outlet number (1-indexed)
+     *
+     * @remarks
+     * Protocol Command: !AutoReboot=<autoReboot>
+     *
+     * @throws {WattBoxError}
+     */
+    public async setAutoReboot(autoReboot: boolean): Promise<void> {
+        await this.handleControlMessage(`!AutoReboot=${autoReboot ? 1 : 0}`);
+    }
+
+    /**
+     * Execute an action on a specific outlet.
+     *
+     * To reset all outlets, set outlet to 0 and action to WattBoxOutletAction.RESET.
+     *
+     * @param outlet - The outlet number (1-indexed) or 0 for all outlets
+     * @param action - The action to perform on the outlet
+     *
+     * @remarks
+     * Protocol Command: !OutletSet=<outlet>,<action>
+     *
+     * @throws {WattBoxError}
+     */
+    public async setOutlet(outlet: number, action: WattBoxOutletAction): Promise<void> {
         await this.handleControlMessage(`!OutletSet=${outlet},${WattBoxOutletAction[action]}`);
     }
 
@@ -412,7 +489,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
         // Unsolicited Messages
         if (message.startsWith('~OutletStatus')) {
             const match = /~OutletStatus=((?:[01],)*[01])/.exec(message);
-            if (match) {
+            if (match && match[1]) {
                 this.emit('outletStatus', match[1].split(',').map(x => Boolean(parseInt(x))));
             }
         }
@@ -432,8 +509,12 @@ export interface WattBoxClientOpts {
 export class WattBoxError extends Error { }
 
 export interface WattBoxEvents {
+    /** Emit debug logs for WattBox messages */
     debugmsg: [message: string];
+    /** Emit debug logs for socket events */
     debugsock: [event: string, payload?: string];
+    /** Emitted when outlet status changes. */
     outletStatus: [outlets: boolean[]];
+    /** Emitted when client is connected or reconnected. */
     ready: [];
 }

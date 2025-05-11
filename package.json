@@ -1,7 +1,7 @@
 {
   "name": "wattbox-api",
   "displayName": "WattBox API",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "An unofficial Node.JS client library for the WattBox Integration Protocol API.",
   "keywords": [
     "wattbox"
@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^4",
-    "@types/node": "^22",
+    "@types/node": "^20",
     "eslint": "^9",
     "rimraf": "^6",
     "typedoc": "~0.28",
