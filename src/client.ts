@@ -24,7 +24,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * Will attempt to connect to the WattBox using the provided host, username, and password.
      * Will attempt to automatically reconnect if the connection is lost.
      *
-     * @throws {WattBoxError} If the connection fails or if the login is invalid.
+     * @throws {@link WattBoxError} If the connection fails or if the login is invalid.
      */
     public connect(): Promise<void> {
         return new Promise((resolve, reject) => {
@@ -372,7 +372,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     /**
      * Set auto reboot configuration on the WattBox.
      *
-     * @param autoReboot - The outlet number (1-indexed)
+     * @param autoReboot - Enable or disable auto reboot
      *
      * @remarks
      * Protocol Command: !AutoReboot=<autoReboot>
