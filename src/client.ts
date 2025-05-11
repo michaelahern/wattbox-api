@@ -295,7 +295,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
-     * Get the UPS status if a UPS is attached to the WattBox.
+     * Get the UPS metrics if a UPS is attached to the WattBox.
      *
      * @remarks
      * Protocol Command: ?UPSStatus
