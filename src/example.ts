@@ -42,7 +42,7 @@ async function main() {
     await client.getUPSMetrics().then(resp => console.log('UPS Metrics:', resp)).catch(err => console.error(err));
 
     // await client.reboot().then(() => console.log('Rebooted!')).catch(err => console.error(err));
-    // await client.setOutlet(6, WattBoxOutletAction.RESET).then(() => console.log('Set Outlet 6:', WattBoxOutletAction.RESET)).catch(err => console.error(err));
+    // await client.setOutlet(6, WattBoxOutletAction.RESET).then(() => console.log('Set Outlet 6: RESET')).catch(err => console.error(err));
 }
 
 main().catch(err => console.error(err));
