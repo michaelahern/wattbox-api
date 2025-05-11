@@ -18,7 +18,7 @@ https://michaelahern.github.io/wattbox-api/
 - WB-250 Series
 - WB-150 Series
 
-_Note: This plugin implements the WattBox Integration Protocol used by the above series devices, and does not support WB-700 and WB-300 series devices..._
+_Note: This plugin implements the WattBox Integration Protocol used by the above series devices, which does not support WB-700 and WB-300 series devices..._
 
 ## Installing
 
