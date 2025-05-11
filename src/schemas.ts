@@ -5,21 +5,21 @@ export enum WattBoxOutletAction {
     RESET = 3
 }
 
-export interface WattBoxOutletPowerStatus {
+export interface WattBoxOutletPowerMetrics {
     outlet: number;
     watts: number;
     amps: number;
     volts: number;
 }
 
-export interface WattBoxPowerStatus {
+export interface WattBoxPowerMetrics {
     amps: number;
     watts: number;
     volts: number;
     safeVoltageStatus: boolean;
 }
 
-export interface WattBoxUPSStatus {
+export interface WattBoxUPSMetrics {
     batteryCharge: number;
     batteryLoad: number;
     batteryHealthy: boolean;

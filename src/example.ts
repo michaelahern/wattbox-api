@@ -32,15 +32,17 @@ async function main() {
     await client.getHostname().then(resp => console.log('Hostname:', resp)).catch(err => console.error(err));
     await client.getModel().then(resp => console.log('Model:', resp)).catch(err => console.error(err));
     await client.getOutletCount().then(resp => console.log('Outlet Count:', resp)).catch(err => console.error(err));
-    await client.getOutletName().then(resp => console.log('Outlet Name:', resp)).catch(err => console.error(err));
-    await client.getOutletPowerStatus(2).then(resp => console.log('Outlet Power Status:', resp)).catch(err => console.error(err));
+    await client.getOutletNames().then(resp => console.log('Outlet Names:', resp)).catch(err => console.error(err));
+    await client.getOutletPowerMetrics(1).then(resp => console.log('Outlet Power Metrics:', resp)).catch(err => console.error(err));
+    await client.getOutletPowerMetrics(2).then(resp => console.log('Outlet Power Metrics:', resp)).catch(err => console.error(err));
     await client.getOutletStatus().then(resp => console.log('Outlet Status:', resp)).catch(err => console.error(err));
-    await client.getPowerStatus().then(resp => console.log('Power Status:', resp)).catch(err => console.error(err));
+    await client.getPowerMetrics().then(resp => console.log('Power Metrics:', resp)).catch(err => console.error(err));
     await client.getServiceTag().then(resp => console.log('Service Tag:', resp)).catch(err => console.error(err));
-    await client.getUPSConnection().then(resp => console.log('UPS Connection:', resp)).catch(err => console.error(err));
-    await client.getUPSStatus().then(resp => console.log('UPS Status:', resp)).catch(err => console.error(err));
+    await client.getUPSConnected().then(resp => console.log('UPS Connected:', resp)).catch(err => console.error(err));
+    await client.getUPSMetrics().then(resp => console.log('UPS Metrics:', resp)).catch(err => console.error(err));
 
-    // await client.execOutletSet(6, WattBoxOutletAction.RESET).then(() => console.log('Set Outlet 6:', WattBoxOutletAction.RESET)).catch(err => console.error(err));
+    // await client.reboot().then(() => console.log('Rebooted!')).catch(err => console.error(err));
+    // await client.setOutlet(6, WattBoxOutletAction.RESET).then(() => console.log('Set Outlet 6:', WattBoxOutletAction.RESET)).catch(err => console.error(err));
 }
 
 main().catch(err => console.error(err));
