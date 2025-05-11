@@ -60,7 +60,7 @@ async function main() {
         .catch(err => console.error(err));
     // Outlet Status: [ true, true, true, true, true, true ]
 
-    await client.setOutlet(6, WattBoxOutletAction.OFF)
+    await client.setOutletAction(6, WattBoxOutletAction.OFF)
         .catch(err => console.error(err));
 }
 

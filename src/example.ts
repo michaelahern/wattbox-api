@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { styleText } from 'node:util';
-import { WattBoxClient /* , WattBoxOutletAction */ } from './module.js';
+import { WattBoxClient /* , WattBoxOutletAction, WattBoxOutletMode */ } from './module.js';
 
 async function main() {
     const client = new WattBoxClient({
@@ -41,7 +41,11 @@ async function main() {
     await client.getUPSMetrics().then(resp => console.log('UPS Metrics:', resp)).catch(err => console.error(err));
 
     // await client.reboot().then(() => console.log('Rebooted!')).catch(err => console.error(err));
-    // await client.setOutlet(6, WattBoxOutletAction.RESET).then(() => console.log('Set Outlet 6: RESET')).catch(err => console.error(err));
+
+    // await client.setOutletAction(6, WattBoxOutletAction.RESET).then(() => console.log('Set Outlet 6 Action: RESET')).catch(err => console.error(err));
+    // await client.setOutletMode(6, WattBoxOutletMode.ENABLED).then(() => console.log('Set Outlet 6 Mode: ENABLED')).catch(err => console.error(err));
+    // await client.setOutletName(6, 'Open').then(() => console.log('Set Outlet 6 Name: Open')).catch(err => console.error(err));
+    // await client.setOutletPowerOnDelay(6, 30).then(() => console.log('Set Outlet 6 Power On Delay: 30s')).catch(err => console.error(err));
 }
 
 main().catch(err => console.error(err));

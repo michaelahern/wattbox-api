@@ -5,6 +5,12 @@ export enum WattBoxOutletAction {
     RESET = 3
 }
 
+export enum WattBoxOutletMode {
+    ENABLED = 0,
+    DISABLED = 1,
+    RESET_ONLY = 2
+}
+
 export interface WattBoxOutletPowerMetrics {
     outlet: number;
     watts: number;

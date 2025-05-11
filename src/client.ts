@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import { Socket } from 'net';
 import { WattBoxOutletAction } from './schemas.js';
-import type { WattBoxOutletPowerMetrics, WattBoxPowerMetrics, WattBoxUPSMetrics } from './schemas.js';
+import type { WattBoxOutletMode, WattBoxOutletPowerMetrics, WattBoxPowerMetrics, WattBoxUPSMetrics } from './schemas.js';
 
 export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     private opts: WattBoxClientOpts;
@@ -117,7 +117,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @remarks
      * Protocol Command: ?AutoReboot
      *
-     * @throws {WattBoxError}
+     * @throws {@link WattBoxError}
      */
     public async getAutoReboot(): Promise<boolean> {
         const response = await this.handleRequestMessage('?AutoReboot');
@@ -131,7 +131,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @remarks
      * Protocol Command: ?Firmware
      *
-     * @throws {WattBoxError}
+     * @throws {@link WattBoxError}
      */
     public async getFirmware(): Promise<string> {
         const response = await this.handleRequestMessage('?Firmware');
@@ -145,7 +145,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @remarks
      * Protocol Command: ?Hostname
      *
-     * @throws {WattBoxError}
+     * @throws {@link WattBoxError}
      */
     public async getHostname(): Promise<string> {
         const response = await this.handleRequestMessage('?Hostname');
@@ -159,7 +159,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @remarks
      * Protocol Command: ?Model
      *
-     * @throws {WattBoxError}
+     * @throws {@link WattBoxError}
      */
     public async getModel(): Promise<string> {
         const response = await this.handleRequestMessage('?Model');
@@ -173,7 +173,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @remarks
      * Protocol Command: ?OutletCount
      *
-     * @throws {WattBoxError}
+     * @throws {@link WattBoxError}
      */
     public async getOutletCount(): Promise<number> {
         const response = await this.handleRequestMessage('?OutletCount');
@@ -187,7 +187,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @remarks
      * Protocol Command: ?OutletName
      *
-     * @throws {WattBoxError}
+     * @throws {@link WattBoxError}
      */
     public async getOutletNames(): Promise<string[]> {
         const response = await this.handleRequestMessage('?OutletName');
@@ -205,7 +205,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      *
      * Not supported on WB150/250
      *
-     * @throws {WattBoxError}
+     * @throws {@link WattBoxError}
      */
     public async getOutletPowerMetrics(outlet: number): Promise<WattBoxOutletPowerMetrics | null> {
         const response = await this.handleRequestMessage(`?OutletPowerStatus=${outlet}`);
@@ -232,7 +232,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @remarks
      * Protocol Command: ?OutletStatus
      *
-     * @throws {WattBoxError}
+     * @throws {@link WattBoxError}
      */
     public async getOutletStatus(): Promise<boolean[]> {
         const response = await this.handleRequestMessage('?OutletStatus');
@@ -248,7 +248,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      *
      * NOTE: Not supported on WB150/250
      *
-     * @throws {WattBoxError}
+     * @throws {@link WattBoxError}
      */
     public async getPowerMetrics(): Promise<WattBoxPowerMetrics | null> {
         const response = await this.handleRequestMessage('?PowerStatus');
@@ -272,7 +272,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @remarks
      * Protocol Command: ?ServiceTag
      *
-     * @throws {WattBoxError}
+     * @throws {@link WattBoxError}
      */
     public async getServiceTag(): Promise<string> {
         const response = await this.handleRequestMessage('?ServiceTag');
@@ -286,7 +286,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @remarks
      * Protocol Command: ?UPSConnection
      *
-     * @throws {WattBoxError}
+     * @throws {@link WattBoxError}
      */
     public async getUPSConnected(): Promise<boolean> {
         const response = await this.handleRequestMessage('?UPSConnection');
@@ -300,7 +300,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @remarks
      * Protocol Command: ?UPSStatus
      *
-     * @throws {WattBoxError}
+     * @throws {@link WattBoxError}
      */
     public async getUPSMetrics(): Promise<WattBoxUPSMetrics | null> {
         const response = await this.handleRequestMessage('?UPSStatus');
@@ -357,13 +357,13 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
-     * Request to reboot the device immediately. The client will loose the
-     * connection to the device until the device is back online.
+     * Reboot the WattBox device immediately. The client will loose the
+     * connection to the device until it is back online.
      *
      * @remarks
      * Protocol Command: !Reboot
      *
-     * @throws {WattBoxError}
+     * @throws {@link WattBoxError}
      */
     public async reboot(): Promise<void> {
         await this.handleControlMessage(`!Reboot`);
@@ -377,7 +377,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @remarks
      * Protocol Command: !AutoReboot=<autoReboot>
      *
-     * @throws {WattBoxError}
+     * @throws {@link WattBoxError}
      */
     public async setAutoReboot(autoReboot: boolean): Promise<void> {
         await this.handleControlMessage(`!AutoReboot=${autoReboot ? 1 : 0}`);
@@ -389,15 +389,60 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * To reset all outlets, set outlet to 0 and action to WattBoxOutletAction.RESET.
      *
      * @param outlet - The outlet number (1-indexed) or 0 for all outlets
-     * @param action - The action to perform on the outlet
+     * @param action - The action to perform on the outlet (OFF, ON, TOGGLE, RESET)
      *
      * @remarks
      * Protocol Command: !OutletSet=<outlet>,<action>
      *
-     * @throws {WattBoxError}
+     * @throws {@link WattBoxError}
      */
-    public async setOutlet(outlet: number, action: WattBoxOutletAction): Promise<void> {
+    public async setOutletAction(outlet: number, action: WattBoxOutletAction): Promise<void> {
         await this.handleControlMessage(`!OutletSet=${outlet},${WattBoxOutletAction[action]}`);
+    }
+
+    /**
+     * Set the operating mode for a specific outlet.
+     *
+     * @param outlet - The outlet number (1-indexed)
+     * @param mode - The mode to configure on the outlet (ENABLED, DISABLED, RESET_ONLY)
+     *
+     * @remarks
+     * Protocol Command: !OutletModeSet=<outlet>,<mode>
+     *
+     * @throws {@link WattBoxError}
+     */
+    public async setOutletMode(outlet: number, mode: WattBoxOutletMode): Promise<void> {
+        await this.handleControlMessage(`!OutletModeSet=${outlet},${mode}`);
+    }
+
+    /**
+     * Set the name for a specific outlet.
+     *
+     * @param outlet - The outlet number (1-indexed)
+     * @param name - The outlet name
+     *
+     * @remarks
+     * Protocol Command: !OutletNameSet=<outlet>,<name>
+     *
+     * @throws {@link WattBoxError}
+     */
+    public async setOutletName(outlet: number, name: string): Promise<void> {
+        await this.handleControlMessage(`!OutletNameSet=${outlet},${name}`);
+    }
+
+    /**
+     * Set the power on delay for a specific outlet.
+     *
+     * @param outlet - The outlet number (1-indexed)
+     * @param delay - Power on delay in seconds, accepts values between 1 and 600
+     *
+     * @remarks
+     * Protocol Command: !OutletPowerOnDelaySet=<outlet>,<delay>
+     *
+     * @throws {@link WattBoxError}
+     */
+    public async setOutletPowerOnDelay(outlet: number, delay: number): Promise<void> {
+        await this.handleControlMessage(`!OutletPowerOnDelaySet=${outlet},${Math.trunc(delay)}`);
     }
 
     private async handleControlMessage(message: string): Promise<void> {
