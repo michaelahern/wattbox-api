@@ -1,7 +1,7 @@
 {
   "name": "wattbox-api",
-  "displayName": "WattBox API",
-  "version": "0.4.0",
+  "displayName": "WattBox API Client",
+  "version": "1.0.0",
   "description": "An unofficial Node.JS client library for WattBox IP Power devices.",
   "keywords": [
     "wattbox"
@@ -13,7 +13,7 @@
   "license": "ISC",
   "author": "Michael Ahern <michael.ahern@gmail.com>",
   "files": [
-    "lib"
+    "./lib"
   ],
   "type": "module",
   "exports": {
