@@ -4,17 +4,17 @@ import { WattBoxOutletAction } from './schemas.js';
 import type { WattBoxOutletMode, WattBoxOutletPowerMetrics, WattBoxPowerMetrics, WattBoxUPSMetrics } from './schemas.js';
 
 export class WattBoxClient extends EventEmitter<WattBoxEvents> {
-    private opts: WattBoxClientOpts;
+    #opts: WattBoxClientOpts;
 
-    private bcc: EventEmitter = new EventEmitter();
-    private connected = false;
-    private reconnectAttempts = 0;
-    private reconnectTimer: NodeJS.Timeout | null = null;
-    private socket: Socket | null = null;
+    #bcc: EventEmitter = new EventEmitter();
+    #connected = false;
+    #reconnectAttempts = 0;
+    #reconnectTimer: NodeJS.Timeout | null = null;
+    #socket: Socket | null = null;
 
     constructor(opts: WattBoxClientOpts) {
         super();
-        this.opts = opts;
+        this.#opts = opts;
     }
 
     /**
@@ -28,69 +28,69 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      */
     public connect(): Promise<void> {
         return new Promise((resolve, reject) => {
-            this.socket = new Socket();
-            this.socket.setEncoding('utf8');
-            this.socket.setKeepAlive(true, this.opts.timeout ?? 5000);
-            this.socket.setTimeout(this.opts.timeout ?? 5000);
+            this.#socket = new Socket();
+            this.#socket.setEncoding('utf8');
+            this.#socket.setKeepAlive(true, this.#opts.timeout ?? 5000);
+            this.#socket.setTimeout(this.#opts.timeout ?? 5000);
 
-            this.socket.on('connect', () => {
+            this.#socket.on('connect', () => {
                 this.emit('debugsock', 'connect');
-                this.connected = true;
-                this.reconnectAttempts = 0;
+                this.#connected = true;
+                this.#reconnectAttempts = 0;
             });
 
-            this.bcc.removeAllListeners('login');
-            this.bcc.once('login', (success: boolean) => {
+            this.#bcc.removeAllListeners('login');
+            this.#bcc.once('login', (success: boolean) => {
                 if (success) {
                     this.emit('ready');
                     resolve();
                 }
                 else {
-                    this.reconnectAttempts = -1;
+                    this.#reconnectAttempts = -1;
                     this.disconnect();
                     reject(new WattBoxError('Invalid Login'));
                 }
             });
 
-            this.socket.on('data', (data: string) => {
+            this.#socket.on('data', (data: string) => {
                 this.emit('debugsock', 'data', data);
-                this.handleData(data);
+                this.#handleData(data);
             });
 
-            this.socket.on('timeout', () => {
-                if (!this.connected) {
+            this.#socket.on('timeout', () => {
+                if (!this.#connected) {
                     this.emit('debugsock', 'timeout');
-                    this.socket?.destroy();
+                    this.#socket?.destroy();
                 }
             });
 
-            this.socket.on('close', () => {
+            this.#socket.on('close', () => {
                 this.emit('debugsock', 'close');
-                this.connected = false;
-                if (this.reconnectAttempts >= 0) {
-                    const maxReconnectAttempts = this.opts.maxReconnectAttempts ?? Infinity;
-                    if (this.reconnectAttempts >= maxReconnectAttempts) {
+                this.#connected = false;
+                if (this.#reconnectAttempts >= 0) {
+                    const maxReconnectAttempts = this.#opts.maxReconnectAttempts ?? Infinity;
+                    if (this.#reconnectAttempts >= maxReconnectAttempts) {
                         return;
                     }
 
-                    this.reconnectAttempts++;
-                    const reconnectBackoff = Math.min(32, Math.pow(2, this.reconnectAttempts)) * 1000; // 2, 4, 8, 16, 32, 32, ...
-                    this.emit('debugsock', 'reconnect', `#${this.reconnectAttempts}/${maxReconnectAttempts} in ${reconnectBackoff / 1000}s`);
+                    this.#reconnectAttempts++;
+                    const reconnectBackoff = Math.min(32, Math.pow(2, this.#reconnectAttempts)) * 1000; // 2, 4, 8, 16, 32, 32, ...
+                    this.emit('debugsock', 'reconnect', `#${this.#reconnectAttempts}/${maxReconnectAttempts} in ${reconnectBackoff / 1000}s`);
 
-                    this.reconnectTimer = setTimeout(() => {
+                    this.#reconnectTimer = setTimeout(() => {
                         this.connect().catch();
                     }, reconnectBackoff);
                 }
             });
 
-            this.socket.on('error', (err) => {
+            this.#socket.on('error', (err) => {
                 this.emit('debugsock', 'error', err.message);
-                if (!this.connected) {
+                if (!this.#connected) {
                     reject(err);
                 }
             });
 
-            this.socket.connect(23, this.opts.host);
+            this.#socket.connect(23, this.#opts.host);
         });
     }
 
@@ -98,17 +98,17 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * Disconnect from the WattBox.
      */
     public disconnect(): void {
-        if (this.reconnectTimer) {
-            clearTimeout(this.reconnectTimer);
-            this.reconnectTimer = null;
+        if (this.#reconnectTimer) {
+            clearTimeout(this.#reconnectTimer);
+            this.#reconnectTimer = null;
         }
 
-        if (this.socket) {
-            this.socket.end();
-            this.socket = null;
+        if (this.#socket) {
+            this.#socket.end();
+            this.#socket = null;
         }
 
-        this.connected = false;
+        this.#connected = false;
     }
 
     /**
@@ -120,7 +120,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async getAutoReboot(): Promise<boolean> {
-        const response = await this.handleRequestMessage('?AutoReboot');
+        const response = await this.#handleRequestMessage('?AutoReboot');
         const match = /\?AutoReboot=([01])/.exec(response);
         return match && match[1] ? Boolean(parseInt(match[1])) : false;
     }
@@ -134,7 +134,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async getFirmware(): Promise<string> {
-        const response = await this.handleRequestMessage('?Firmware');
+        const response = await this.#handleRequestMessage('?Firmware');
         const match = /\?Firmware=(.*)/.exec(response);
         return match && match[1] ? match[1] : '';
     }
@@ -148,7 +148,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async getHostname(): Promise<string> {
-        const response = await this.handleRequestMessage('?Hostname');
+        const response = await this.#handleRequestMessage('?Hostname');
         const match = /\?Hostname=(.*)/.exec(response);
         return match && match[1] ? match[1] : '';
     }
@@ -162,7 +162,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async getModel(): Promise<string> {
-        const response = await this.handleRequestMessage('?Model');
+        const response = await this.#handleRequestMessage('?Model');
         const match = /\?Model=(.*)/.exec(response);
         return match && match[1] ? match[1] : '';
     }
@@ -176,7 +176,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async getOutletCount(): Promise<number> {
-        const response = await this.handleRequestMessage('?OutletCount');
+        const response = await this.#handleRequestMessage('?OutletCount');
         const match = /\?OutletCount=(\d+)/.exec(response);
         return match && match[1] ? parseInt(match[1]) : 0;
     }
@@ -190,7 +190,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async getOutletNames(): Promise<string[]> {
-        const response = await this.handleRequestMessage('?OutletName');
+        const response = await this.#handleRequestMessage('?OutletName');
         const match = /\?OutletName=(.*)/.exec(response);
         return match && match[1] ? match[1].split(',').map(x => x.slice(1, -1)) : [];
     }
@@ -208,7 +208,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async getOutletPowerMetrics(outlet: number): Promise<WattBoxOutletPowerMetrics | null> {
-        const response = await this.handleRequestMessage(`?OutletPowerStatus=${outlet}`);
+        const response = await this.#handleRequestMessage(`?OutletPowerStatus=${outlet}`);
         const match = /\?OutletPowerStatus=(\d+),(\d+(?:\.\d+)?),(\d+(?:\.\d+)?),(\d+(?:\.\d+)?)/.exec(response);
 
         if (!match || match.length < 5) {
@@ -235,7 +235,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async getOutletStatus(): Promise<boolean[]> {
-        const response = await this.handleRequestMessage('?OutletStatus');
+        const response = await this.#handleRequestMessage('?OutletStatus');
         const match = /\?OutletStatus=((?:[01],)*[01])/.exec(response);
         return match && match[1] ? match[1].split(',').map(x => Boolean(parseInt(x))) : [];
     }
@@ -251,7 +251,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async getPowerMetrics(): Promise<WattBoxPowerMetrics | null> {
-        const response = await this.handleRequestMessage('?PowerStatus');
+        const response = await this.#handleRequestMessage('?PowerStatus');
         const match = /\?PowerStatus=(\d+(?:\.\d+)?),(\d+(?:\.\d+)?),(\d+(?:\.\d+)?),(0|1)/.exec(response);
 
         if (!match || match.length < 5) {
@@ -275,7 +275,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async getServiceTag(): Promise<string> {
-        const response = await this.handleRequestMessage('?ServiceTag');
+        const response = await this.#handleRequestMessage('?ServiceTag');
         const match = /\?ServiceTag=(.*)/.exec(response);
         return match && match[1] ? match[1] : '';
     }
@@ -289,7 +289,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async getUPSConnected(): Promise<boolean> {
-        const response = await this.handleRequestMessage('?UPSConnection');
+        const response = await this.#handleRequestMessage('?UPSConnection');
         const match = /\?UPSConnection=([01])/.exec(response);
         return match && match[1] ? Boolean(parseInt(match[1])) : false;
     }
@@ -303,7 +303,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async getUPSMetrics(): Promise<WattBoxUPSMetrics | null> {
-        const response = await this.handleRequestMessage('?UPSStatus');
+        const response = await this.#handleRequestMessage('?UPSStatus');
         const match = /\?UPSStatus=(\d+),(\d+),(Good|Bad),(True|False),(\d+),(True|False),(True|False)/.exec(response);
 
         if (!match || match.length < 8) {
@@ -321,37 +321,37 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
         };
     }
 
-    private async handleRequestMessage(message: string): Promise<string> {
-        if (!this.connected) {
+    async #handleRequestMessage(message: string): Promise<string> {
+        if (!this.#connected) {
             throw new WattBoxError('Not Connected');
         }
 
-        if (this.socket) {
+        if (this.#socket) {
             this.emit('debugmsg', `[--->] ${message}`);
-            this.socket.write(`${message}\n`);
+            this.#socket.write(`${message}\n`);
         }
 
         return new Promise<string>((resolve, reject) => {
             const onTimeout = setTimeout(() => {
-                this.socket?.destroy();
+                this.#socket?.destroy();
                 reject(new WattBoxError('Timeout'));
-            }, this.opts.timeout ?? 5000);
+            }, this.#opts.timeout ?? 5000);
 
             const onRequest = (data: string) => {
-                this.bcc.removeListener('error', onError);
+                this.#bcc.removeListener('error', onError);
                 clearTimeout(onTimeout);
                 resolve(data);
             };
 
             const onError = () => {
-                this.bcc.removeListener(message.split('=')[0], onRequest);
+                this.#bcc.removeListener(message.split('=')[0], onRequest);
                 clearTimeout(onTimeout);
                 reject(new WattBoxError('Request Error'));
             };
 
             Promise.race([
-                this.bcc.once(message.split('=')[0], onRequest),
-                this.bcc.once('error', onError)
+                this.#bcc.once(message.split('=')[0], onRequest),
+                this.#bcc.once('error', onError)
             ]);
         });
     }
@@ -366,7 +366,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async reboot(): Promise<void> {
-        await this.handleControlMessage(`!Reboot`);
+        await this.#handleControlMessage(`!Reboot`);
     }
 
     /**
@@ -380,7 +380,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async setAutoReboot(autoReboot: boolean): Promise<void> {
-        await this.handleControlMessage(`!AutoReboot=${autoReboot ? 1 : 0}`);
+        await this.#handleControlMessage(`!AutoReboot=${autoReboot ? 1 : 0}`);
     }
 
     /**
@@ -397,7 +397,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async setOutletAction(outlet: number, action: WattBoxOutletAction): Promise<void> {
-        await this.handleControlMessage(`!OutletSet=${outlet},${WattBoxOutletAction[action]}`);
+        await this.#handleControlMessage(`!OutletSet=${outlet},${WattBoxOutletAction[action]}`);
     }
 
     /**
@@ -412,7 +412,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async setOutletMode(outlet: number, mode: WattBoxOutletMode): Promise<void> {
-        await this.handleControlMessage(`!OutletModeSet=${outlet},${mode}`);
+        await this.#handleControlMessage(`!OutletModeSet=${outlet},${mode}`);
     }
 
     /**
@@ -427,7 +427,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async setOutletName(outlet: number, name: string): Promise<void> {
-        await this.handleControlMessage(`!OutletNameSet=${outlet},${name}`);
+        await this.#handleControlMessage(`!OutletNameSet=${outlet},${name}`);
     }
 
     /**
@@ -442,51 +442,51 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @throws {@link WattBoxError}
      */
     public async setOutletPowerOnDelay(outlet: number, delay: number): Promise<void> {
-        await this.handleControlMessage(`!OutletPowerOnDelaySet=${outlet},${Math.trunc(delay)}`);
+        await this.#handleControlMessage(`!OutletPowerOnDelaySet=${outlet},${Math.trunc(delay)}`);
     }
 
-    private async handleControlMessage(message: string): Promise<void> {
-        if (!this.connected) {
+    async #handleControlMessage(message: string): Promise<void> {
+        if (!this.#connected) {
             throw new WattBoxError('Not Connected');
         }
 
-        if (this.socket) {
+        if (this.#socket) {
             this.emit('debugmsg', `[--->] ${message}`);
-            this.socket.write(`${message}\n`);
+            this.#socket.write(`${message}\n`);
         }
 
         return new Promise<void>((resolve, reject) => {
             const onTimeout = setTimeout(() => {
-                this.socket?.destroy();
+                this.#socket?.destroy();
                 reject(new WattBoxError('Timeout'));
-            }, this.opts.timeout ?? 5000);
+            }, this.#opts.timeout ?? 5000);
 
             const onOk = () => {
-                this.bcc.removeListener('error', onError);
+                this.#bcc.removeListener('error', onError);
                 clearTimeout(onTimeout);
                 resolve();
             };
 
             const onError = () => {
-                this.bcc.removeListener('ok', onOk);
+                this.#bcc.removeListener('ok', onOk);
                 clearTimeout(onTimeout);
                 reject(new WattBoxError('Control Error'));
             };
 
             Promise.race([
-                this.bcc.once('ok', onOk),
-                this.bcc.once('error', onError)
+                this.#bcc.once('ok', onOk),
+                this.#bcc.once('error', onError)
             ]);
         });
     }
 
-    private handleData(data: string): void {
+    #handleData(data: string): void {
         const message = data.trim();
 
         // Handle Multiple Messages
         // Example: OK\n~OutletStatus=1,1,1,1,1,1
         if (message.split('\n').length > 1) {
-            message.split('\n').forEach(msg => this.handleData(msg));
+            message.split('\n').forEach(msg => this.#handleData(msg));
             return;
         }
 
@@ -495,20 +495,20 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
             case 'Please Login to Continue':
                 return;
             case 'Username:':
-                if (this.socket) {
-                    this.socket.write(`${this.opts.username}\n`);
+                if (this.#socket) {
+                    this.#socket.write(`${this.#opts.username}\n`);
                 }
                 return;
             case 'Password:':
-                if (this.socket) {
-                    this.socket.write(`${this.opts.password}\n`);
+                if (this.#socket) {
+                    this.#socket.write(`${this.#opts.password}\n`);
                 }
                 return;
             case 'Successfully Logged In!':
-                this.bcc.emit('login', true);
+                this.#bcc.emit('login', true);
                 return;
             case 'Invalid Login':
-                this.bcc.emit('login', false);
+                this.#bcc.emit('login', false);
                 return;
         }
 
@@ -517,17 +517,17 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
         // Request Messages
         if (message.startsWith('?')) {
-            this.bcc.emit(message.split('=')[0], message);
+            this.#bcc.emit(message.split('=')[0], message);
             return;
         }
 
         // Control Messages
         switch (message) {
             case 'OK':
-                this.bcc.emit('ok');
+                this.#bcc.emit('ok');
                 return;
             case '#Error':
-                this.bcc.emit('error');
+                this.#bcc.emit('error');
                 return;
         }
 
