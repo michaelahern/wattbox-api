@@ -375,7 +375,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @param autoReboot - Enable or disable auto reboot
      *
      * @remarks
-     * Protocol Command: !AutoReboot=<autoReboot>
+     * Protocol Command: !AutoReboot={autoReboot}
      *
      * @throws {@link WattBoxError}
      */
@@ -392,7 +392,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @param action - The action to perform on the outlet (OFF, ON, TOGGLE, RESET)
      *
      * @remarks
-     * Protocol Command: !OutletSet=<outlet>,<action>
+     * Protocol Command: !OutletSet={outlet},{action}
      *
      * @throws {@link WattBoxError}
      */
@@ -407,7 +407,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @param mode - The mode to configure on the outlet (ENABLED, DISABLED, RESET_ONLY)
      *
      * @remarks
-     * Protocol Command: !OutletModeSet=<outlet>,<mode>
+     * Protocol Command: !OutletModeSet={outlet},{mode}
      *
      * @throws {@link WattBoxError}
      */
@@ -422,7 +422,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @param name - The outlet name
      *
      * @remarks
-     * Protocol Command: !OutletNameSet=<outlet>,<name>
+     * Protocol Command: !OutletNameSet={outlet},{name}
      *
      * @throws {@link WattBoxError}
      */
@@ -437,7 +437,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * @param delay - Power on delay in seconds, accepts values between 1 and 600
      *
      * @remarks
-     * Protocol Command: !OutletPowerOnDelaySet=<outlet>,<delay>
+     * Protocol Command: !OutletPowerOnDelaySet={outlet},{delay}
      *
      * @throws {@link WattBoxError}
      */

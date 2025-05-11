@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { styleText } from 'node:util';
 import { WattBoxClient /* , WattBoxOutletAction, WattBoxOutletMode */ } from './module.js';
 
