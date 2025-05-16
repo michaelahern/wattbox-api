@@ -1,10 +1,10 @@
 # WattBox API Client
 
 [![npm](https://badgen.net/npm/v/wattbox-api)](https://www.npmjs.com/package/wattbox-api)
-[![npm](https://badgen.net/npm/dt/wattbox-api)](https://www.npmjs.com/package/wattbox-api)
 [![node](https://badgen.net/npm/node/wattbox-api)](https://www.npmjs.com/package/wattbox-api)
+[![downloads](https://badgen.net/npm/dt/wattbox-api)](https://www.npmjs.com/package/wattbox-api)
 [![types](https://badgen.net/npm/types/wattbox-api)](https://www.npmjs.com/package/wattbox-api)
-[![build](https://github.com/michaelahern/wattbox-api/actions/workflows/build.yml/badge.svg)](https://github.com/michaelahern/wattbox-api/actions/workflows/build.yml)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/michaelahern/wattbox-api)
 
 An unofficial Node.JS client library for [WattBox IP Power](https://www.snapav.com/shop/en/snapav/wattbox-ip-power) devices.
 
