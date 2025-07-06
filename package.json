@@ -1,7 +1,7 @@
 {
   "name": "wattbox-api",
   "displayName": "WattBox API Client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An unofficial Node.JS client library for WattBox IP Power devices.",
   "keywords": [
     "wattbox"
