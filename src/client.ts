@@ -211,7 +211,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
         const response = await this.#handleRequestMessage(`?OutletPowerStatus=${outlet}`);
         const match = /\?OutletPowerStatus=(\d+),(\d+(?:\.\d+)?),(\d+(?:\.\d+)?),(\d+(?:\.\d+)?)/.exec(response);
 
-        if (!match || match.length < 5) {
+        if (!match || match.length < 5 || !match[1] || !match[2] || !match[3] || !match[4]) {
             return null;
         }
 
@@ -254,7 +254,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
         const response = await this.#handleRequestMessage('?PowerStatus');
         const match = /\?PowerStatus=(\d+(?:\.\d+)?),(\d+(?:\.\d+)?),(\d+(?:\.\d+)?),(0|1)/.exec(response);
 
-        if (!match || match.length < 5) {
+        if (!match || match.length < 5 || !match[1] || !match[2] || !match[3] || !match[4]) {
             return null;
         }
 
@@ -306,7 +306,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
         const response = await this.#handleRequestMessage('?UPSStatus');
         const match = /\?UPSStatus=(\d+),(\d+),(Good|Bad),(True|False),(\d+),(True|False),(True|False)/.exec(response);
 
-        if (!match || match.length < 8) {
+        if (!match || match.length < 8 || !match[1] || !match[2] || !match[3] || !match[4] || !match[5] || !match[6] || !match[7]) {
             return null;
         }
 
@@ -331,6 +331,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
             this.#socket.write(`${message}\n`);
         }
 
+        const messageParts = message.split('=');
+        const messagePrefix = messageParts[0] ? messageParts[0] : message;
+
         return new Promise<string>((resolve, reject) => {
             const onTimeout = setTimeout(() => {
                 this.#socket?.destroy();
@@ -344,13 +347,13 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
             };
 
             const onError = () => {
-                this.#bcc.removeListener(message.split('=')[0], onRequest);
+                this.#bcc.removeListener(messagePrefix, onRequest);
                 clearTimeout(onTimeout);
                 reject(new WattBoxError('Request Error'));
             };
 
             Promise.race([
-                this.#bcc.once(message.split('=')[0], onRequest),
+                this.#bcc.once(messagePrefix, onRequest),
                 this.#bcc.once('error', onError)
             ]);
         });
@@ -517,7 +520,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
         // Request Messages
         if (message.startsWith('?')) {
-            this.#bcc.emit(message.split('=')[0], message);
+            const messageParts = message.split('=');
+            const messagePrefix = messageParts[0] ? messageParts[0] : message;
+            this.#bcc.emit(messagePrefix, message);
             return;
         }
 
