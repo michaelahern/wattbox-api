@@ -343,7 +343,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
-     * Reboot the WattBox device immediately. The client will loose the
+     * Reboot the WattBox device immediately. The client will lose the
      * connection to the device until it is back online.
      * @remarks
      * Protocol Command: !Reboot
