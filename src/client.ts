@@ -19,11 +19,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
     /**
      * Establish a connection to the WattBox.
-     *
      * @remarks
      * Will attempt to connect to the WattBox using the provided host, username, and password.
      * Will attempt to automatically reconnect if the connection is lost.
-     *
      * @throws {@link WattBoxError} If the connection fails or if the login is invalid.
      */
     public connect(): Promise<void> {
@@ -113,10 +111,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
     /**
      * Get if auto-reboot is enabled on the WattBox.
-     *
      * @remarks
      * Protocol Command: ?AutoReboot
-     *
+     * @returns True if auto-reboot is enabled
      * @throws {@link WattBoxError}
      */
     public async getAutoReboot(): Promise<boolean> {
@@ -127,10 +124,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
     /**
      * Get the firmware version of the WattBox.
-     *
      * @remarks
      * Protocol Command: ?Firmware
-     *
+     * @returns The firmware version string
      * @throws {@link WattBoxError}
      */
     public async getFirmware(): Promise<string> {
@@ -141,10 +137,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
     /**
      * Get the hostname of the WattBox.
-     *
      * @remarks
      * Protocol Command: ?Hostname
-     *
+     * @returns The hostname of the WattBox
      * @throws {@link WattBoxError}
      */
     public async getHostname(): Promise<string> {
@@ -155,10 +150,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
     /**
      * Get the model number of the WattBox.
-     *
      * @remarks
      * Protocol Command: ?Model
-     *
+     * @returns The model number string
      * @throws {@link WattBoxError}
      */
     public async getModel(): Promise<string> {
@@ -169,10 +163,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
     /**
      * Get the number of outlets on the WattBox.
-     *
      * @remarks
      * Protocol Command: ?OutletCount
-     *
+     * @returns The number of outlets
      * @throws {@link WattBoxError}
      */
     public async getOutletCount(): Promise<number> {
@@ -183,10 +176,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
     /**
      * Get the names of all outlets on the WattBox.
-     *
      * @remarks
      * Protocol Command: ?OutletName
-     *
+     * @returns An array of outlet names
      * @throws {@link WattBoxError}
      */
     public async getOutletNames(): Promise<string[]> {
@@ -197,14 +189,12 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
     /**
      * Get the power metrics for a specific outlet.
-     *
      * @param outlet - The outlet number (1-indexed)
-     *
      * @remarks
      * Protocol Command: ?OutletPowerStatus
      *
      * Not supported on WB150/250
-     *
+     * @returns The outlet power metrics, or null if unavailable
      * @throws {@link WattBoxError}
      */
     public async getOutletPowerMetrics(outlet: number): Promise<WattBoxOutletPowerMetrics | null> {
@@ -226,12 +216,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     /**
      * Get the status of all outlets, where the array index is the outlet number (0-indexed)
      * and the value at the index indicates the outlet state (Off = false, On = true).
-     *
-     * @param outlet - The outlet number (1-indexed)
-     *
      * @remarks
      * Protocol Command: ?OutletStatus
-     *
+     * @returns An array of outlet states where false is off and true is on
      * @throws {@link WattBoxError}
      */
     public async getOutletStatus(): Promise<boolean[]> {
@@ -242,12 +229,11 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
     /**
      * Get the power metrics for the WattBox.
-     *
      * @remarks
      * Protocol Command: ?PowerStatus
      *
      * NOTE: Not supported on WB150/250
-     *
+     * @returns The power metrics, or null if unavailable
      * @throws {@link WattBoxError}
      */
     public async getPowerMetrics(): Promise<WattBoxPowerMetrics | null> {
@@ -268,10 +254,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
     /**
      * Get the service tag of the WattBox.
-     *
      * @remarks
      * Protocol Command: ?ServiceTag
-     *
+     * @returns The service tag string
      * @throws {@link WattBoxError}
      */
     public async getServiceTag(): Promise<string> {
@@ -282,10 +267,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
     /**
      * Get if a UPS has been attached to the WattBox.
-     *
      * @remarks
      * Protocol Command: ?UPSConnection
-     *
+     * @returns Whether a UPS is connected
      * @throws {@link WattBoxError}
      */
     public async getUPSConnected(): Promise<boolean> {
@@ -296,10 +280,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
     /**
      * Get the UPS metrics if a UPS is attached to the WattBox.
-     *
      * @remarks
      * Protocol Command: ?UPSStatus
-     *
+     * @returns The UPS metrics, or null if unavailable
      * @throws {@link WattBoxError}
      */
     public async getUPSMetrics(): Promise<WattBoxUPSMetrics | null> {
@@ -360,12 +343,10 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
     }
 
     /**
-     * Reboot the WattBox device immediately. The client will loose the
+     * Reboot the WattBox device immediately. The client will lose the
      * connection to the device until it is back online.
-     *
      * @remarks
      * Protocol Command: !Reboot
-     *
      * @throws {@link WattBoxError}
      */
     public async reboot(): Promise<void> {
@@ -374,12 +355,9 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
     /**
      * Set auto reboot configuration on the WattBox.
-     *
      * @param autoReboot - Enable or disable auto reboot
-     *
      * @remarks
      * Protocol Command: !AutoReboot={autoReboot}
-     *
      * @throws {@link WattBoxError}
      */
     public async setAutoReboot(autoReboot: boolean): Promise<void> {
@@ -390,13 +368,10 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * Execute an action on a specific outlet.
      *
      * To reset all outlets, set outlet to 0 and action to WattBoxOutletAction.RESET.
-     *
      * @param outlet - The outlet number (1-indexed) or 0 for all outlets
      * @param action - The action to perform on the outlet (OFF, ON, TOGGLE, RESET)
-     *
      * @remarks
      * Protocol Command: !OutletSet={outlet},{action}
-     *
      * @throws {@link WattBoxError}
      */
     public async setOutletAction(outlet: number, action: WattBoxOutletAction): Promise<void> {
@@ -405,13 +380,10 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
     /**
      * Set the operating mode for a specific outlet.
-     *
      * @param outlet - The outlet number (1-indexed)
      * @param mode - The mode to configure on the outlet (ENABLED, DISABLED, RESET_ONLY)
-     *
      * @remarks
      * Protocol Command: !OutletModeSet={outlet},{mode}
-     *
      * @throws {@link WattBoxError}
      */
     public async setOutletMode(outlet: number, mode: WattBoxOutletMode): Promise<void> {
@@ -420,13 +392,10 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
     /**
      * Set the name for a specific outlet.
-     *
      * @param outlet - The outlet number (1-indexed)
      * @param name - The outlet name
-     *
      * @remarks
      * Protocol Command: !OutletNameSet={outlet},{name}
-     *
      * @throws {@link WattBoxError}
      */
     public async setOutletName(outlet: number, name: string): Promise<void> {
@@ -435,13 +404,10 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
 
     /**
      * Set the power on delay for a specific outlet.
-     *
      * @param outlet - The outlet number (1-indexed)
      * @param delay - Power on delay in seconds, accepts values between 1 and 600
-     *
      * @remarks
      * Protocol Command: !OutletPowerOnDelaySet={outlet},{delay}
-     *
      * @throws {@link WattBoxError}
      */
     public async setOutletPowerOnDelay(outlet: number, delay: number): Promise<void> {
