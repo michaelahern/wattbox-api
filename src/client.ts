@@ -113,6 +113,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * Get if auto-reboot is enabled on the WattBox.
      * @remarks
      * Protocol Command: ?AutoReboot
+     * @returns True if auto-reboot is enabled
      * @throws {@link WattBoxError}
      */
     public async getAutoReboot(): Promise<boolean> {
@@ -125,6 +126,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * Get the firmware version of the WattBox.
      * @remarks
      * Protocol Command: ?Firmware
+     * @returns The firmware version string
      * @throws {@link WattBoxError}
      */
     public async getFirmware(): Promise<string> {
@@ -137,6 +139,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * Get the hostname of the WattBox.
      * @remarks
      * Protocol Command: ?Hostname
+     * @returns The hostname of the WattBox
      * @throws {@link WattBoxError}
      */
     public async getHostname(): Promise<string> {
@@ -149,6 +152,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * Get the model number of the WattBox.
      * @remarks
      * Protocol Command: ?Model
+     * @returns The model number string
      * @throws {@link WattBoxError}
      */
     public async getModel(): Promise<string> {
@@ -161,6 +165,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * Get the number of outlets on the WattBox.
      * @remarks
      * Protocol Command: ?OutletCount
+     * @returns The number of outlets
      * @throws {@link WattBoxError}
      */
     public async getOutletCount(): Promise<number> {
@@ -173,6 +178,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * Get the names of all outlets on the WattBox.
      * @remarks
      * Protocol Command: ?OutletName
+     * @returns An array of outlet names
      * @throws {@link WattBoxError}
      */
     public async getOutletNames(): Promise<string[]> {
@@ -188,6 +194,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * Protocol Command: ?OutletPowerStatus
      *
      * Not supported on WB150/250
+     * @returns The outlet power metrics, or null if unavailable
      * @throws {@link WattBoxError}
      */
     public async getOutletPowerMetrics(outlet: number): Promise<WattBoxOutletPowerMetrics | null> {
@@ -211,6 +218,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * and the value at the index indicates the outlet state (Off = false, On = true).
      * @remarks
      * Protocol Command: ?OutletStatus
+     * @returns An array of outlet states where false is off and true is on
      * @throws {@link WattBoxError}
      */
     public async getOutletStatus(): Promise<boolean[]> {
@@ -225,6 +233,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * Protocol Command: ?PowerStatus
      *
      * NOTE: Not supported on WB150/250
+     * @returns The power metrics, or null if unavailable
      * @throws {@link WattBoxError}
      */
     public async getPowerMetrics(): Promise<WattBoxPowerMetrics | null> {
@@ -247,6 +256,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * Get the service tag of the WattBox.
      * @remarks
      * Protocol Command: ?ServiceTag
+     * @returns The service tag string
      * @throws {@link WattBoxError}
      */
     public async getServiceTag(): Promise<string> {
@@ -259,6 +269,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * Get if a UPS has been attached to the WattBox.
      * @remarks
      * Protocol Command: ?UPSConnection
+     * @returns Whether a UPS is connected
      * @throws {@link WattBoxError}
      */
     public async getUPSConnected(): Promise<boolean> {
@@ -271,6 +282,7 @@ export class WattBoxClient extends EventEmitter<WattBoxEvents> {
      * Get the UPS metrics if a UPS is attached to the WattBox.
      * @remarks
      * Protocol Command: ?UPSStatus
+     * @returns The UPS metrics, or null if unavailable
      * @throws {@link WattBoxError}
      */
     public async getUPSMetrics(): Promise<WattBoxUPSMetrics | null> {
