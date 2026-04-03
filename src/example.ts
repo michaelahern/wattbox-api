@@ -1,6 +1,13 @@
 import { styleText } from 'node:util';
 import { WattBoxClient /* , WattBoxOutletAction, WattBoxOutletMode */ } from './module.js';
 
+/**
+ * Entry point that initializes a WattBox client, validates required
+ * environment variables, and gets information from the WattBox device.
+ *
+ * Requires the `WATTBOX_HOST`, `WATTBOX_USERNAME`, and `WATTBOX_PASSWORD`
+ * environment variables to be set for API authentication.
+ */
 async function main() {
     const host = process.env.WATTBOX_HOST;
     const username = process.env.WATTBOX_USERNAME;
